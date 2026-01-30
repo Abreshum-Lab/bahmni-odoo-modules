@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+
+    <record id="seq_patient_id" model="ir.sequence">
+        <field name="name">Patient ID Sequence</field>
+        <field name="code">abershum.patient.id.sequence</field>
+        <field name="implementation">no_gap</field>
+        <field name="prefix">PAT</field>
+        <field name="padding">6</field>
+        <field name="company_id" eval="False"/>
+        <field name="number_next">1</field>
+        <field name="number_increment">1</field>
+    </record>
+
+</odoo>

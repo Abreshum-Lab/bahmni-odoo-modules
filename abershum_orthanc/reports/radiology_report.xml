@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="report_radiology_order_document">
+        <t t-call="web.external_layout">
+            <div class="page">
+                <div class="oe_structure"/>
+                
+                <h2 class="text-center mt-4 mb-4">Radiology Report</h2>
+                
+                <div class="row mb-4">
+                    <div class="col-6">
+                        <strong>Patient:</strong> <span t-field="doc.sale_order_id.partner_id"/>
+                    </div>
+                    <div class="col-6 text-right">
+                        <strong>Order Ref:</strong> <span t-field="doc.name"/><br/>
+                        <strong>Date:</strong> <span t-field="doc.create_date" t-options='{"widget": "date"}'/><br/>
+                        <strong>Study UUID:</strong> <span t-field="doc.study_uuid"/>
+                    </div>
+                </div>
+
+                <div class="row mb-2">
+                    <div class="col-12">
+                         <strong>Service:</strong> <span t-field="doc.product_id"/>
+                    </div>
+                </div>
+
+                <hr/>
+
+                <div class="mt-4" t-if="doc.findings">
+                    <h4>Findings</h4>
+                    <div t-field="doc.findings"/>
+                </div>
+
+                <div class="mt-4" t-if="doc.impression">
+                    <h4>Impression</h4>
+                    <div t-field="doc.impression"/>
+                </div>
+
+                <div class="mt-4" t-if="doc.recommendation">
+                    <h4>Recommendation</h4>
+                    <div t-field="doc.recommendation"/>
+                </div>
+
+                <div class="oe_structure"/>
+                
+                <div class="row mt-5" style="page-break-inside: avoid;">
+                    <div class="col-6">
+                        <t t-if="doc.state == 'signed'">
+                             <p><strong>Electronically Signed by:</strong> <span t-field="doc.radiologist_id"/></p>
+                             <p><strong>Date:</strong> <span t-field="doc.signed_at"/></p>
+                        </t>
+                         <t t-else="">
+                             <p><strong>Radiologist:</strong> ____________________________</p>
+                             <p><strong>Signature:</strong> ____________________________</p>
+                         </t>
+                    </div>
+                    <div class="col-6 text-right">
+                         <!-- Printed By Tracking - Passed via Abstract Model -->
+                        <p class="text-muted" style="font-size: 0.8em;">
+                            Printed by <span t-esc="printed_by"/> on <span t-esc="printed_at"/>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <template id="report_radiology_order">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <t t-call="abershum_orthanc.report_radiology_order_document"/>
+            </t>
+        </t>
+    </template>
+</odoo>

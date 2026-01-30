@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_report_radiology_order" model="ir.actions.report">
+        <field name="name">Radiology Report</field>
+        <field name="model">orthanc.order</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">abershum_orthanc.report_radiology_order</field>
+        <field name="report_file">abershum_orthanc.report_radiology_order</field>
+        <field name="print_report_name">'Radiology_Report_%s' % object.name</field>
+        <field name="binding_model_id" ref="model_orthanc_order"/>
+        <field name="binding_type">report</field>
+    </record>
+</odoo>

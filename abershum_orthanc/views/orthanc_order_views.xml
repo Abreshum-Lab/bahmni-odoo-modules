@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    
+    <!-- Search View -->
+    <record id="view_orthanc_order_search" model="ir.ui.view">
+        <field name="name">orthanc.order.search</field>
+        <field name="model">orthanc.order</field>
+        <field name="arch" type="xml">
+            <search string="Search Radiology Orders">
+                <field name="name"/>
+                <field name="sale_order_id"/>
+                <field name="product_id"/>
+                <field name="study_uuid"/>
+                <filter string="My Orders" name="my_orders" domain="[('radiologist_id', '=', uid)]"/>
+                <filter string="Draft" name="draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="Signed" name="signed" domain="[('state', '=', 'signed')]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Status" name="group_by_state" context="{'group_by': 'state'}"/>
+                    <filter string="Sale Order" name="group_by_so" context="{'group_by': 'sale_order_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Tree View -->
+    <record id="view_orthanc_order_tree" model="ir.ui.view">
+        <field name="name">orthanc.order.tree</field>
+        <field name="model">orthanc.order</field>
+        <field name="arch" type="xml">
+            <tree string="Radiology Orders" decoration-info="state == 'draft'" decoration-success="state == 'signed'">
+                <field name="name"/>
+                <field name="sale_order_id"/>
+                <field name="product_id"/>
+                <field name="radiologist_id"/>
+                <field name="signed_at" optional="hide"/>
+                <field name="state" widget="badge" decoration-info="state == 'draft'" decoration-success="state == 'signed'"/>
+                <button name="action_open_orthanc" type="object" string="View Image" icon="fa-eye" class="btn-primary"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_orthanc_order_form" model="ir.ui.view">
+        <field name="name">orthanc.order.form</field>
+        <field name="model">orthanc.order</field>
+        <field name="arch" type="xml">
+            <form string="Radiology Order">
+                <header>
+                    <button name="action_open_orthanc" type="object" string="Open in Viewer" class="oe_highlight" icon="fa-desktop"/>
+                    <button name="action_sign_report" type="object" string="Sign Report" class="oe_highlight" states="draft" groups="abershum_orthanc.group_radiologist"/>
+                    <button name="%(action_orthanc_cancel_wizard)d" type="action" string="Cancel Order" states="draft" groups="abershum_orthanc.group_radiologist"/>
+                    <button name="action_reset_draft" type="object" string="Reset to Draft" states="signed" groups="abershum_orthanc.group_radiologist"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,signed,cancelled"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="sale_order_id"/>
+                            <field name="product_id"/>
+                            <field name="cancel_reason" attrs="{'invisible': [('state', '!=', 'cancelled')]}" class="text-danger"/>
+                        </group>
+                        <group>
+                            <field name="study_uuid"/>
+                            <field name="radiologist_id" readonly="1"/>
+                            <field name="signed_at" readonly="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Radiology Report">
+                            <group string="Findings">
+                                <field name="findings" nolabel="1" placeholder="Enter findings here..." attrs="{'readonly': [('state', '=', 'signed')]}"/>
+                            </group>
+                            <group string="Impression">
+                                <field name="impression" nolabel="1" placeholder="Enter impression here..." attrs="{'readonly': [('state', '=', 'signed')]}"/>
+                            </group>
+                             <group string="Recommendation">
+                                <field name="recommendation" nolabel="1" placeholder="Enter recommendation here..." attrs="{'readonly': [('state', '=', 'signed')]}"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="activity_ids" widget="mail_activity"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- Window Action -->
+    <record id="action_orthanc_orders" model="ir.actions.act_window">
+        <field name="name">Radiology Orders</field>
+        <field name="res_model">orthanc.order</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No radiology orders found.
+            </p>
+            <p>
+                Orders will appear here when Sales Orders for radiology products are confirmed.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menus -->
+    <!-- Top Level Menu -->
+    <menuitem id="menu_radiology_root" 
+              name="Radiology" 
+              web_icon="abershum_orthanc,static/description/icon.png" 
+              sequence="10"/>
+
+    <menuitem id="menu_radiology_orders"
+              name="Orders"
+              parent="menu_radiology_root"
+              action="action_orthanc_orders"
+              sequence="10"/>
+
+</odoo>

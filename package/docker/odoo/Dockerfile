@@ -4,7 +4,10 @@ ENV ADDON_PATH=/opt/bahmni-erp/bahmni-addons
 
 USER root
 COPY package/docker/odoo/odoo.conf /etc/odoo/odoo.conf
-RUN chown -R odoo:odoo /etc/odoo
+COPY package/docker/odoo/entrypoint.sh /usr/local/bin/entrypoint-custom.sh
+RUN chown -R odoo:odoo /etc/odoo && \
+    chmod +x /usr/local/bin/entrypoint-custom.sh && \
+    chmod 755 /usr/local/bin/entrypoint-custom.sh
 
 COPY bahmni_account ${ADDON_PATH}/bahmni_account/
 COPY bahmni_address_mapping ${ADDON_PATH}/bahmni_address_mapping/
@@ -20,12 +23,15 @@ COPY openerp7_data_import ${ADDON_PATH}/openerp7_data_import/
 COPY odoo10_data_import ${ADDON_PATH}/odoo10_data_import/
 COPY bahmni_reports ${ADDON_PATH}/bahmni_reports
 COPY bahmni_customer_return ${ADDON_PATH}/bahmni_customer_return
+COPY abershum_elis_sync ${ADDON_PATH}/abershum-elis-sync/
 COPY community_modules ${ADDON_PATH}/community_modules/
 COPY package/resources/data/address.seed.csv ${ADDON_PATH}/bahmni_initializer/data/
 COPY package/resources/data/uom_seed.xml ${ADDON_PATH}/bahmni_initializer/data/
 COPY package/resources/data/order_type.xml ${ADDON_PATH}/bahmni_initializer/data/
 COPY package/resources/data/sale_shop.xml ${ADDON_PATH}/bahmni_initializer/data/
-RUN pip3 install python-decouple
+RUN pip3 install python-decouple requests
 
-USER odoo
-CMD ["odoo", "-u", "all", "-i", "sale_management,purchase,stock,point_of_sale,l10n_generic_coa,bahmni_account,bahmni_product,bahmni_api_feed,bahmni_stock,bahmni_purchase,bahmni_address_mapping,bahmni_sale,restful_api,bahmni_reports,bahmni_auto_payment_reconciliation", "--without-demo", "-d odoo"]
+# Keep as root for entrypoint to fix permissions, entrypoint will switch to odoo user
+ENTRYPOINT ["/usr/local/bin/entrypoint-custom.sh"]
+# Note: USER odoo is removed - our custom entrypoint handles user switching after fixing permissions
+CMD ["odoo", "-u", "all", "-i", "sale_management,purchase,stock,point_of_sale,l10n_generic_coa,bahmni_account,bahmni_product,bahmni_api_feed,bahmni_stock,bahmni_purchase,bahmni_address_mapping,bahmni_sale,restful_api,bahmni_reports,bahmni_auto_payment_reconciliation,abershum-elis-sync", "--without-demo", "-d odoo"]

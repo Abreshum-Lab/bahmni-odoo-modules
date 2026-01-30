@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+        <!-- Bahmni App Admin Group -->
+        <record id="group_bahmni_app_admin" model="res.groups">
+            <field name="name">Bahmni App Admin</field>
+            <field name="category_id" ref="base.module_category_sales"/>
+            <field name="comment">Full access to Bahmni App features including failed sync events management</field>
+        </record>
+    </data>
+</odoo>

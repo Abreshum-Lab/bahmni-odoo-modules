@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="inherit_partner_view_birthdate_age" model="ir.ui.view">
+        <field name="name">inherit.partner.view.birthdate.age</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <!-- Ensure name field is first and properly labeled -->
+            <xpath expr="//field[@name='name']" position="attributes">
+                <attribute name="string">Name</attribute>
+            </xpath>
+            
+            <!-- Add customer_rank as invisible field for attrs -->
+            <xpath expr="//field[@name='name']" position="after">
+                <field name="customer_rank" invisible="1"/>
+            </xpath>
+            
+            <!-- Add Personal Information group with Date of Birth and Gender after name -->
+            <xpath expr="//field[@name='customer_rank']" position="after">
+                <group string="Personal Information" 
+                       attrs="{'invisible': [('is_company', '=', True)]}">
+                    <group>
+                        <field name="birthdate" 
+                               string="Date of Birth"
+                               attrs="{'required': [('customer_rank', '>', 0), ('is_company', '=', False), ('age', '=', 0)]}"/>
+                        <field name="gender" 
+                               string="Gender"
+                               attrs="{'required': [('customer_rank', '>', 0), ('is_company', '=', False)]}"/>
+                    </group>
+                    <group>
+                        <field name="age" 
+                               string="Age (Years)"
+                               attrs="{'required': [('customer_rank', '>', 0), ('is_company', '=', False), ('birthdate', '=', False)]}"/>
+                    </group>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>
