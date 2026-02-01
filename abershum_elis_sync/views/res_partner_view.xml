@@ -13,26 +13,46 @@
             <!-- Add customer_rank as invisible field for attrs -->
             <xpath expr="//field[@name='name']" position="after">
                 <field name="customer_rank" invisible="1"/>
+                <!-- Label for is_patient checkbox -->
+                <div attrs="{'invisible': [('is_company', '=', True)]}">
+                    <field name="is_patient" class="oe_inline"/> <label for="is_patient" string="Is Patient"/>
+                </div>
+            </xpath>
+
+            <!-- Hide original Reference field to avoid duplication and editing -->
+            <xpath expr="//field[@name='ref']" position="attributes">
+                <attribute name="invisible">1</attribute>
             </xpath>
             
-            <!-- Add Personal Information group with Date of Birth and Gender after name -->
-            <xpath expr="//field[@name='customer_rank']" position="after">
-                <group string="Personal Information" 
-                       attrs="{'invisible': [('is_company', '=', True)]}">
+            <!-- Hide original UUID field if it exists -->
+            <!-- Note: Base Odoo doesn't usually show UUID, but if other modules do, we might want to ensure ours is read-only or hidden 
+                 Actually, we added ours as readonly, if there is another one, it might conflict in name if we were not careful with _inherit.
+                 But we defined uuid field on model, so it matches. -->
+
+            <!-- Add Demographics Tab before Contacts -->
+            <xpath expr="//notebook/page[1]" position="before">
+                <page string="Demographics" name="demographics" attrs="{'invisible': ['|', ('is_company', '=', True), ('is_patient', '=', False)]}">
                     <group>
-                        <field name="birthdate" 
-                               string="Date of Birth"
-                               attrs="{'required': [('customer_rank', '>', 0), ('is_company', '=', False), ('age', '=', 0)]}"/>
-                        <field name="gender" 
-                               string="Gender"
-                               attrs="{'required': [('customer_rank', '>', 0), ('is_company', '=', False)]}"/>
+                        <group string="Personal Details">
+                            <field name="birthdate" 
+                                   default_focus="1"
+                                   placeholder="YYYY-MM-DD"
+                                   attrs="{'required': [('is_patient', '=', True), ('is_company', '=', False), ('age', '=', 0)]}"/>
+                            <field name="age" 
+                                   attrs="{'required': [('is_patient', '=', True), ('is_company', '=', False), ('birthdate', '=', False)]}"/>
+                            <field name="gender" 
+                                   attrs="{'required': [('is_patient', '=', True), ('is_company', '=', False)]}"/>
+                        </group>
+                        <group string="Additional Information">
+                            <field name="primary_relative" 
+                                   placeholder="Name of Primary Relative"
+                                   attrs="{'invisible': [('is_patient', '=', False)]}"/>
+                            <field name="occupation" 
+                                   placeholder="Current Occupation"
+                                   attrs="{'invisible': [('is_patient', '=', False)]}"/>
+                        </group>
                     </group>
-                    <group>
-                        <field name="age" 
-                               string="Age (Years)"
-                               attrs="{'required': [('customer_rank', '>', 0), ('is_company', '=', False), ('birthdate', '=', False)]}"/>
-                    </group>
-                </group>
+                </page>
             </xpath>
         </field>
     </record>

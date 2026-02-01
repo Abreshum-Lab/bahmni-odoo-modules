@@ -43,6 +43,7 @@ class OpenELISFailedEvent(models.Model):
     event_type = fields.Selection([
         ('patient', 'Patient Sync'),
         ('test_order', 'Test Order Sync'),
+        ('lab_test', 'Lab Test Sync'),
     ], string='Event Type', required=True, index=True)
     
     partner_id = fields.Many2one(

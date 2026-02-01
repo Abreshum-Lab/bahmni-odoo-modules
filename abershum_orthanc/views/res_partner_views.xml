@@ -5,12 +5,47 @@
         <field name="model">res.partner</field>
         <field name="inherit_id" ref="base.view_partner_form"/>
         <field name="arch" type="xml">
-            <xpath expr="//field[@name='category_id']" position="after">
-                <field name="is_patient"/>
-                <field name="ref" readonly="1"/>
-                <field name="gender" attrs="{'invisible': [('is_patient', '=', False)]}"/>
-                <field name="birthdate" attrs="{'invisible': [('is_patient', '=', False)]}"/>
-                <field name="age" attrs="{'invisible': [('is_patient', '=', False)]}"/>
+            <!-- Ensure name field is first and properly labeled -->
+            <xpath expr="//field[@name='name']" position="attributes">
+                <attribute name="string">Name</attribute>
+            </xpath>
+            
+            <!-- Label for is_patient checkbox -->
+            <xpath expr="//field[@name='name']" position="after">
+                <div attrs="{'invisible': [('is_company', '=', True)]}">
+                    <field name="is_patient" class="oe_inline"/> <label for="is_patient" string="Is Patient"/>
+                </div>
+            </xpath>
+
+            <!-- Hide original Reference field -->
+            <xpath expr="//field[@name='ref']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+
+            <!-- Add Demographics Tab before Contacts -->
+            <xpath expr="//notebook/page[1]" position="before">
+                <page string="Demographics" name="demographics" attrs="{'invisible': ['|', ('is_company', '=', True), ('is_patient', '=', False)]}">
+                    <group>
+                        <group string="Personal Details">
+                            <field name="birthdate" 
+                                   default_focus="1"
+                                   placeholder="YYYY-MM-DD"
+                                   attrs="{'required': [('is_patient', '=', True), ('is_company', '=', False), ('age', '=', 0)]}"/>
+                            <field name="age" 
+                                   attrs="{'required': [('is_patient', '=', True), ('is_company', '=', False), ('birthdate', '=', False)]}"/>
+                            <field name="gender" 
+                                   attrs="{'required': [('is_patient', '=', True), ('is_company', '=', False)]}"/>
+                        </group>
+                        <group string="Additional Information">
+                            <field name="primary_relative" 
+                                   placeholder="Name of Primary Relative"
+                                   attrs="{'invisible': [('is_patient', '=', False)]}"/>
+                            <field name="occupation" 
+                                   placeholder="Current Occupation"
+                                   attrs="{'invisible': [('is_patient', '=', False)]}"/>
+                        </group>
+                    </group>
+                </page>
             </xpath>
         </field>
     </record>

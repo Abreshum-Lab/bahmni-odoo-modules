@@ -30,6 +30,7 @@ It automatically identifies lab test products and sends them to OpenELIS via RES
         'views/openelis_failed_event_views.xml',
         'views/res_config_settings_view.xml',
         'views/res_partner_view.xml',
+        'views/sale_order_view.xml',
         'views/menus.xml',
     ],
     'demo': [],

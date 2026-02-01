@@ -13,42 +13,52 @@ class OpenELISSyncService(models.Model):
     _auto = False
 
     @api.model
-    def sync_test_order_to_openelis(self, sale_order):
+    def sync_lab_test_to_openelis(self, product):
         """
-        Sync test order from Odoo to OpenELIS when sale order is confirmed.
+        Sync lab test (product) from Odoo to OpenELIS.
         
-        :param sale_order: sale.order record
+        :param product: product.template or product.product record
         :return: dict with status and message
         """
+        if not product:
+            return {'status': 'error', 'message': 'No product provided'}
+
         # Check if sync is enabled
         if not self._is_sync_enabled():
-            _logger.debug("OpenELIS sync is disabled, skipping sync for sale order: %s", sale_order.name)
+            _logger.debug("OpenELIS sync is disabled, skipping sync for product: %s", product.name)
             return {'status': 'skipped', 'message': 'OpenELIS sync is disabled'}
 
-        # Filter lab test products
-        lab_test_lines = self._get_lab_test_order_lines(sale_order)
-        if not lab_test_lines:
-            _logger.debug("No lab test products found in sale order: %s", sale_order.name)
-            return {'status': 'skipped', 'message': 'No lab test products found'}
+        # Check if product is a lab test
+        lab_test_category_ids = self._get_lab_test_category_ids()
+        if product.categ_id.id not in lab_test_category_ids:
+            _logger.debug("Product %s is not in a lab test category, skipping sync", product.name)
+            return {'status': 'skipped', 'message': 'Product is not a lab test'}
 
         try:
             # Build payload
-            payload = self._build_payload(sale_order, lab_test_lines)
+            payload = {
+                'id': product.id,
+                'name': product.name,
+                'code': product.default_code or '',
+                'description': product.description_sale or '',
+                'category': product.categ_id.name,
+                'active': product.active,
+                'list_price': product.list_price
+            }
             
-            # Call OpenELIS API (sale_order_id is already in context from sale_order.py)
-            response = self._call_openelis_api(payload)
+            # Call OpenELIS API
+            response = self._call_openelis_api(payload, endpoint='/rest/odoo/test', event_type='lab_test')
             
             if response.get('status') == 'success':
-                _logger.info("Successfully synced sale order %s to OpenELIS", sale_order.name)
+                _logger.info("Successfully synced lab test %s to OpenELIS", product.name)
                 return {'status': 'success', 'message': response.get('message', 'Synced successfully')}
             else:
-                _logger.error("Failed to sync sale order %s to OpenELIS: %s", 
-                             sale_order.name, response.get('message', 'Unknown error'))
+                _logger.error("Failed to sync lab test %s to OpenELIS: %s", 
+                             product.name, response.get('message', 'Unknown error'))
                 return {'status': 'error', 'message': response.get('message', 'Unknown error')}
                 
         except Exception as e:
-            _logger.error("Error syncing sale order %s to OpenELIS: %s", sale_order.name, str(e), exc_info=True)
-            # Don't raise exception - just log and return error status
+            _logger.error("Error syncing lab test %s to OpenELIS: %s", product.name, str(e), exc_info=True)
             return {'status': 'error', 'message': str(e)}
 
     @api.model
@@ -155,35 +165,25 @@ class OpenELISSyncService(models.Model):
         return payload
 
     @api.model
-    def _call_openelis_api(self, payload):
-        """Call OpenELIS REST API"""
-        _logger.info("=== Starting test order sync to OpenELIS ===")
-        
+    def _call_openelis_api(self, payload, endpoint='/rest/odoo/test-order', event_type='test_order'):
+        """
+        Common method to call OpenELIS API.
+        """
+        # Get OpenELIS API configuration
         api_url = self.env['ir.config_parameter'].sudo().get_param('abershum_elis_sync.openelis_api_url', '')
         api_username = self.env['ir.config_parameter'].sudo().get_param('abershum_elis_sync.openelis_api_username', '')
         api_password = self.env['ir.config_parameter'].sudo().get_param('abershum_elis_sync.openelis_api_password', '')
-        
-        _logger.info("OpenELIS API Configuration:")
-        _logger.info("  API URL (raw): %s", api_url or '(not configured)')
-        _logger.info("  API Username: %s", api_username or '(not configured)')
-        _logger.info("  API Password: %s", '***' if api_password else '(not configured)')
-        
+
         if not api_url:
-            error_msg = "OpenELIS API URL is not configured. Please configure it in Settings."
-            _logger.error(error_msg)
-            raise UserError(error_msg)
-        
-        # Normalize API URL - ensure it has http:// or https:// scheme
-        original_url = api_url
+            _logger.warning("OpenELIS API URL is not configured. Cannot sync %s", event_type)
+            return {'status': 'error', 'message': 'API URL not configured'}
+
+        # Normalize API URL
         if not api_url.startswith(('http://', 'https://')):
-            # If no scheme provided, default to http://
             api_url = 'http://' + api_url.lstrip('/')
-            _logger.info("URL scheme normalized: '%s' -> '%s'", original_url, api_url)
         
-        # For Docker internal communication, replace localhost with service name
-        # Check if we're likely in Docker (common indicators)
+        # Docker internal communication normalization
         import socket
-        is_docker = False
         try:
             # Try to resolve 'openelis' hostname - if it works, we're in Docker network
             socket.gethostbyname('openelis')
@@ -208,7 +208,7 @@ class OpenELISSyncService(models.Model):
         
         # Prepare request URL
         base_url = api_url.rstrip('/')
-        url = base_url + '/rest/odoo/test-order'
+        url = base_url + endpoint
         
         _logger.info("=== Request Details ===")
         _logger.info("Full URL: %s", url)
@@ -218,12 +218,16 @@ class OpenELISSyncService(models.Model):
         _logger.info("Timeout: 30 seconds")
         _logger.info("SSL Verification: Disabled")
         _logger.info("Payload Summary:")
-        _logger.info("  Sale Order ID: %s", payload.get('sale_order_id', 'N/A'))
-        _logger.info("  Sale Order Name: %s", payload.get('sale_order_name', 'N/A'))
-        _logger.info("  Patient: %s (ref: %s)", 
-                    payload.get('patient', {}).get('name', 'N/A'),
-                    payload.get('patient', {}).get('ref', 'N/A'))
-        _logger.info("  Order Lines Count: %s", len(payload.get('order_lines', [])))
+        if event_type == 'test_order':
+            _logger.info("  Sale Order ID: %s", payload.get('sale_order_id', 'N/A'))
+            _logger.info("  Sale Order Name: %s", payload.get('sale_order_name', 'N/A'))
+            _logger.info("  Patient: %s (ref: %s)", 
+                        payload.get('patient', {}).get('name', 'N/A'),
+                        payload.get('patient', {}).get('ref', 'N/A'))
+            _logger.info("  Order Lines Count: %s", len(payload.get('order_lines', [])))
+        else:
+            _logger.info("  Product ID: %s", payload.get('id', 'N/A'))
+            _logger.info("  Product Name: %s", payload.get('name', 'N/A'))
         
         headers = {
             'Content-Type': 'application/json'
@@ -288,7 +292,7 @@ class OpenELISSyncService(models.Model):
                         sale_order_id = self.env['sale.order'].search([('name', '=', sale_order_name)], limit=1)
                 
                 self.env['openelis.failed.event'].create_or_update_failed_event(
-                    event_type='test_order',
+                    event_type=event_type,
                     payload_dict=payload,
                     error_message=error_message,
                     error_type=error_type,
@@ -321,7 +325,7 @@ class OpenELISSyncService(models.Model):
                     sale_order_id = self.env['sale.order'].search([('name', '=', sale_order_name)], limit=1)
             
             self.env['openelis.failed.event'].create_or_update_failed_event(
-                event_type='test_order',
+                event_type=event_type,
                 payload_dict=payload,
                 error_message=error_msg,
                 error_type=error_type,
@@ -349,7 +353,7 @@ class OpenELISSyncService(models.Model):
                     sale_order_id = self.env['sale.order'].search([('name', '=', sale_order_name)], limit=1)
             
             self.env['openelis.failed.event'].create_or_update_failed_event(
-                event_type='test_order',
+                event_type=event_type,
                 payload_dict=payload,
                 error_message=error_msg,
                 error_type=error_type,
@@ -376,7 +380,7 @@ class OpenELISSyncService(models.Model):
                     sale_order_id = self.env['sale.order'].search([('name', '=', sale_order_name)], limit=1)
             
             self.env['openelis.failed.event'].create_or_update_failed_event(
-                event_type='test_order',
+                event_type=event_type,
                 payload_dict=payload,
                 error_message=error_msg,
                 error_type=error_type,
@@ -403,7 +407,7 @@ class OpenELISSyncService(models.Model):
                     sale_order_id = self.env['sale.order'].search([('name', '=', sale_order_name)], limit=1)
             
             self.env['openelis.failed.event'].create_or_update_failed_event(
-                event_type='test_order',
+                event_type=event_type,
                 payload_dict=payload,
                 error_message=error_msg,
                 error_type=error_type,
