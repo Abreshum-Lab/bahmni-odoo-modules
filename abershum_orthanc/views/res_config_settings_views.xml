@@ -55,9 +55,9 @@
     </record>
 
     <menuitem id="menu_radiology_config_settings"
-        name="Configuration"
-        parent="menu_radiology_root" 
-        sequence="100"
+        name="Settings"
+        parent="menu_radiology_config" 
+        sequence="10"
         action="action_radiology_config_settings"
         groups="base.group_system"/>
 </odoo>

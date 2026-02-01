@@ -70,12 +70,11 @@ class OrthancOrder(models.Model):
         if not orthanc_url:
             return
         
-        # Construct URL (Example structure)
-        # Assuming Orthanc generic viewer or OHIF viewer url structure
-        # http://<server>/app/explorer.html#study?uuid=<UUID> is a generic placeholder assumption
-        # or http://<server>/ohif/viewer/<UUID>
+        # target_url = f"{orthanc_url.rstrip('/')}/app/explorer.html#study?uuid={self.study_uuid}"
         
-        target_url = f"{orthanc_url.rstrip('/')}/app/explorer.html#study?uuid={self.study_uuid}"
+        # OHIF Viewer Link
+        # Note: OHIF typically expects StudyInstanceUID, but our self.study_uuid is effectively acting as the StudyInstanceUID in generation
+        target_url = f"{orthanc_url.rstrip('/')}/ohif/viewer?StudyInstanceUIDs={self.study_uuid}"
         
         return {
             'type': 'ir.actions.act_url',
