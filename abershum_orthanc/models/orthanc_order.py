@@ -66,7 +66,7 @@ class OrthancOrder(models.Model):
     def action_open_orthanc(self):
         self.ensure_one()
         # Retrieve config settings (Env var > DB param)
-        orthanc_url = os.environ.get('ORTHANC_URL') or self.env['ir.config_parameter'].sudo().get_param('abershum_orthanc.orthanc_api_url')
+        orthanc_url = self.env['ir.config_parameter'].sudo().get_param('abershum_orthanc.orthanc_api_url') or os.environ.get('ORTHANC_URL')
         if not orthanc_url:
             return
         

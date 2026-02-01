@@ -22,7 +22,7 @@ class OrthancService(models.AbstractModel):
         _logger.info("Service: Creating Orthanc worklist for Order %s (Study UUID: %s)", order.name, order.study_uuid)
 
         # Orthanc worklist directory (mounted volume)
-        worklist_dir = '/opt/bahmni-erp/orthanc/worklists'
+        worklist_dir = os.environ.get('ORTHANC_WORKLIST_PATH') or '/opt/bahmni-erp/orthanc/worklists'
         if not os.path.exists(worklist_dir):
             _logger.error("Worklist directory %s does not exist.", worklist_dir)
             return
