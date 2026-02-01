@@ -70,7 +70,7 @@
                         </group>
                         <group>
                             <field name="study_uuid"/>
-                            <field name="radiologist_id" attrs="{'readonly': [('state', '=', 'signed')]}"/>
+                            <field name="radiologist_id" attrs="{'readonly': [('state', 'in', ('sign', 'complete', 'cancel'))]}"/>
                             <field name="signed_at" readonly="1"/>
                         </group>
                     </group>
