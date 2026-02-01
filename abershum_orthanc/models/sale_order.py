@@ -26,6 +26,7 @@ class SaleOrder(models.Model):
                         orthanc_order = self.env['orthanc.order'].create({
                             'sale_order_id': order.id,
                             'product_id': line.product_id.id,
+                            'radiologist_id': order.provider_id.id,
                         })
                         # Explicitly trigger the worklist creation
                         orthanc_order._send_to_orthanc()
@@ -37,11 +38,11 @@ class SaleOrder(models.Model):
             # OPTIMIZE: This could be done with a search on sale_order_id to handle all at once
             orthanc_orders = self.env['orthanc.order'].search([
                 ('sale_order_id', '=', order.id),
-                ('state', '!=', 'cancelled')
+                ('state', '!=', 'cancel')
             ])
             for orthanc_order in orthanc_orders:
                 orthanc_order.write({
-                    'state': 'cancelled',
-                    'cancel_reason': f"Sales Order {order.name} was cancelled."
+                    'state': 'cancel',
+                    'cancel_reason': f"Sales Order {order.name} was cancel."
                 })
         return res

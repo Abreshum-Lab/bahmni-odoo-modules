@@ -17,7 +17,8 @@
         'base', 
         'sale_management', 
         'product', 
-        'mail'
+        'mail',
+        'bahmni_sale'
     ],
     'data': [
         'security/security.xml',
@@ -27,6 +28,7 @@
         'views/sale_order_views.xml',
         'views/res_config_settings_views.xml',
         'data/ir_sequence_data.xml',
+        'data/mail_template_data.xml',
         'views/product_views.xml',
         'views/res_partner_views.xml',
         'views/provider_views.xml',

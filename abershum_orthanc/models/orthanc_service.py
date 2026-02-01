@@ -44,7 +44,9 @@ class OrthancService(models.AbstractModel):
         ds.AccessionNumber = order.name[:16] # Truncate to 16 chars
 
         # Referring Physician
-        if order.sale_order_id and order.sale_order_id.user_id:
+        if order.sale_order_id and order.sale_order_id.provider_id:
+            ds.ReferringPhysicianName = order.sale_order_id.provider_id.name
+        elif order.sale_order_id and order.sale_order_id.user_id:
             ds.ReferringPhysicianName = order.sale_order_id.user_id.name
         else:
              ds.ReferringPhysicianName = self.env.user.name

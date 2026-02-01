@@ -11,9 +11,10 @@
                 <field name="sale_order_id"/>
                 <field name="product_id"/>
                 <field name="study_uuid"/>
-                <filter string="My Orders" name="my_orders" domain="[('radiologist_id', '=', uid)]"/>
+                <!-- <filter string="My Orders" name="my_orders" domain="[('radiologist_id', '=', uid)]"/> -->
                 <filter string="Draft" name="draft" domain="[('state', '=', 'draft')]"/>
-                <filter string="Signed" name="signed" domain="[('state', '=', 'signed')]"/>
+                <filter string="Signed" name="signed" domain="[('state', '=', 'sign')]"/>
+                <filter string="Completed" name="completed" domain="[('state', '=', 'complete')]"/>
                 <group expand="0" string="Group By">
                     <filter string="Status" name="group_by_state" context="{'group_by': 'state'}"/>
                     <filter string="Sale Order" name="group_by_so" context="{'group_by': 'sale_order_id'}"/>
@@ -33,8 +34,9 @@
                 <field name="product_id"/>
                 <field name="radiologist_id"/>
                 <field name="signed_at" optional="hide"/>
-                <field name="state" widget="badge" decoration-info="state == 'draft'" decoration-success="state == 'signed'"/>
+                <field name="state" widget="badge" decoration-info="state == 'draft'" decoration-success="state in ('sign', 'complete')"/>
                 <button name="action_open_orthanc" type="object" string="View Image" icon="fa-eye" class="btn-primary"/>
+                <button name="action_print_report" type="object" string="Print" icon="fa-print" class="btn-secondary"/>
             </tree>
         </field>
     </record>
@@ -48,9 +50,11 @@
                 <header>
                     <button name="action_open_orthanc" type="object" string="Open in Viewer" class="oe_highlight" icon="fa-desktop"/>
                     <button name="action_sign_report" type="object" string="Sign Report" class="oe_highlight" states="draft" groups="abershum_orthanc.group_radiologist"/>
+                    <button name="action_complete" type="object" string="Mark Completed" class="oe_highlight" states="sign" groups="abershum_orthanc.group_radiologist"/>
+                    <button name="action_send_email" type="object" string="Send by Email" icon="fa-envelope" states="sign,complete"/>
                     <button name="%(action_orthanc_cancel_wizard)d" type="action" string="Cancel Order" states="draft" groups="abershum_orthanc.group_radiologist"/>
-                    <button name="action_reset_draft" type="object" string="Reset to Draft" states="signed" groups="abershum_orthanc.group_radiologist"/>
-                    <field name="state" widget="statusbar" statusbar_visible="draft,signed,cancelled"/>
+                    <button name="action_reset_draft" type="object" string="Reset to Draft" states="sign" groups="abershum_orthanc.group_radiologist"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,sign,complete"/>
                 </header>
                 <sheet>
                     <div class="oe_title">
@@ -66,20 +70,20 @@
                         </group>
                         <group>
                             <field name="study_uuid"/>
-                            <field name="radiologist_id" readonly="1"/>
+                            <field name="radiologist_id" attrs="{'readonly': [('state', '=', 'signed')]}"/>
                             <field name="signed_at" readonly="1"/>
                         </group>
                     </group>
                     <notebook>
                         <page string="Radiology Report">
                             <separator string="Findings"/>
-                            <field name="findings" nolabel="1" placeholder="Enter findings here..." attrs="{'readonly': [('state', '=', 'signed')]}"/>
+                            <field name="findings" nolabel="1" placeholder="Enter findings here..." attrs="{'readonly': [('state', 'in', ('sign', 'complete', 'cancel'))]}"/>
                             
                             <separator string="Impression"/>
-                            <field name="impression" nolabel="1" placeholder="Enter impression here..." attrs="{'readonly': [('state', '=', 'signed')]}"/>
+                            <field name="impression" nolabel="1" placeholder="Enter impression here..." attrs="{'readonly': [('state', 'in', ('sign', 'complete', 'cancel'))]}"/>
                             
                             <separator string="Recommendation"/>
-                            <field name="recommendation" nolabel="1" placeholder="Enter recommendation here..." attrs="{'readonly': [('state', '=', 'signed')]}"/>
+                            <field name="recommendation" nolabel="1" placeholder="Enter recommendation here..." attrs="{'readonly': [('state', 'in', ('sign', 'complete', 'cancel'))]}"/>
                         </page>
                     </notebook>
                 </sheet>

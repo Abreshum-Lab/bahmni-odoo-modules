@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="email_template_radiology_report" model="mail.template">
+            <field name="name">Radiology Report - Send by Email</field>
+            <field name="model_id" ref="abershum_orthanc.model_orthanc_order"/>
+            <field name="subject">Radiology Report Ref {{ object.name }}</field>
+            <field name="email_from">{{ user.email_formatted }}</field>
+            <field name="partner_to">{{ object.sale_order_id.partner_id.id }}</field>
+            <field name="report_template" ref="abershum_orthanc.action_report_radiology_order"/>
+            <field name="report_name">Radiology_Report_{{ (object.name or '').replace('/','_') }}</field>
+            <field name="lang">{{ object.sale_order_id.partner_id.lang }}</field>
+            <field name="body_html" type="html">
+                <div style="margin: 0px; padding: 0px;">
+                    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+                        Dear <t t-out="object.sale_order_id.partner_id.name or ''">Patient</t>,
+                        <br/><br/>
+                        Please find attached your radiology report <strong><t t-out="object.name or ''">ORD-XXXX</t></strong>.
+                        <br/><br/>
+                        Service: <t t-out="object.product_id.name or ''">Service Name</t>
+                        <br/>
+                        Date: <t t-out="object.signed_at or object.create_date">Date</t>
+                        <br/><br/>
+                        If you have any questions, please contact us.
+                        <br/><br/>
+                        Best regards,
+                        <br/>
+                        <t t-if="object.radiologist_id">
+                            <t t-out="object.radiologist_id.name or ''">Radiologist</t>
+                        </t>
+                        <t t-else="">
+                            Abershum Radiology Team
+                        </t>
+                    </p>
+                </div>
+            </field>
+        </record>
+    </data>
+</odoo>

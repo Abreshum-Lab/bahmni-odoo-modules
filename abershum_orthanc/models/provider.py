@@ -16,4 +16,5 @@ class AbershumProvider(models.Model):
         ('other', 'Other'),
     ], string='Title', required=True, default='doctor', tracking=True)
     license_number = fields.Char(string='License Number', tracking=True)
+    email = fields.Char(string='Email', tracking=True)
     active = fields.Boolean(default=True, help="Set to False to archive this provider.")

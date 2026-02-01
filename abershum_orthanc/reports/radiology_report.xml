@@ -2,65 +2,86 @@
 <odoo>
     <template id="report_radiology_order_document">
         <t t-call="web.external_layout">
-            <div class="page">
+            <style>
+                .report-body { font-size: 13pt; line-height: 1.5; color: #333; }
+                .report-title { color: #2c3e50; border-bottom: 2px solid #2c3e50; padding-bottom: 10px; }
+                .section-title { color: #2980b9; border-bottom: 1px solid #eee; margin-top: 25px; margin-bottom: 10px; font-weight: bold; text-transform: uppercase; font-size: 14pt; }
+                .content-box { margin-bottom: 20px; padding: 5px 0; }
+                .meta-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+                .meta-table td { padding: 8px 0; vertical-align: top; }
+                .meta-label { font-weight: bold; width: 120px; color: #7f8c8d; }
+                .meta-value { color: #2c3e50; }
+                .signature-block { margin-top: 50px; border-top: 1px dashed #ccc; padding-top: 20px; }
+            </style>
+            
+            <div class="page report-body">
                 <div class="oe_structure"/>
                 
-                <h2 class="text-center mt-4 mb-4">Radiology Report</h2>
+                <h2 class="text-center report-title mb-5">RADIOLOGY EXAMINATION REPORT</h2>
                 
-                <div class="row mb-4">
-                    <div class="col-6">
-                        <strong>Patient:</strong> <span t-field="doc.sale_order_id.partner_id"/><br/>
-                        <strong>Provider:</strong> <span t-field="doc.sale_order_id.provider_id"/>
-                    </div>
-                    <div class="col-6 text-right">
-                        <strong>Order Ref:</strong> <span t-field="doc.name"/><br/>
-                        <strong>Date:</strong> <span t-field="doc.create_date" t-options='{"widget": "date"}'/><br/>
-                        <strong>Study UUID:</strong> <span t-field="doc.study_uuid"/>
-                    </div>
+                <table class="meta-table">
+                    <tr>
+                        <td class="meta-label">Patient:</td>
+                        <td class="meta-value"><strong><span t-field="doc.sale_order_id.partner_id"/></strong></td>
+                        <td class="meta-label">Order Ref:</td>
+                        <td class="meta-value"><span t-field="doc.name"/></td>
+                    </tr>
+                    <tr>
+                        <td class="meta-label">Referring:</td>
+                        <td class="meta-value"><span t-field="doc.sale_order_id.provider_id"/></td>
+                        <td class="meta-label">Exam Date:</td>
+                        <td class="meta-value"><span t-field="doc.create_date" t-options='{"widget": "date"}'/></td>
+                    </tr>
+                    <tr>
+                        <td class="meta-label">Service:</td>
+                        <td class="meta-value"><strong><span t-field="doc.product_id"/></strong></td>
+                        <td class="meta-label">Study ID:</td>
+                        <td class="meta-value" style="font-size: 9pt;"><span t-field="doc.study_uuid"/></td>
+                    </tr>
+                </table>
+
+                <div class="content-box" t-if="doc.findings">
+                    <div class="section-title">Findings</div>
+                    <div style="padding-left: 10px;" t-field="doc.findings"/>
                 </div>
 
-                <div class="row mb-2">
-                    <div class="col-12">
-                         <strong>Service:</strong> <span t-field="doc.product_id"/>
-                    </div>
+                <div class="content-box" t-if="doc.impression">
+                    <div class="section-title">Impression</div>
+                    <div style="padding-left: 10px; font-weight: 500;" t-field="doc.impression"/>
                 </div>
 
-                <hr/>
-
-                <div class="mt-4" t-if="doc.findings">
-                    <h4>Findings</h4>
-                    <div t-field="doc.findings"/>
-                </div>
-
-                <div class="mt-4" t-if="doc.impression">
-                    <h4>Impression</h4>
-                    <div t-field="doc.impression"/>
-                </div>
-
-                <div class="mt-4" t-if="doc.recommendation">
-                    <h4>Recommendation</h4>
-                    <div t-field="doc.recommendation"/>
+                <div class="content-box" t-if="doc.recommendation">
+                    <div class="section-title">Recommendation</div>
+                    <div style="padding-left: 10px;" t-field="doc.recommendation"/>
                 </div>
 
                 <div class="oe_structure"/>
                 
-                <div class="row mt-5" style="page-break-inside: avoid;">
-                    <div class="col-6">
-                        <t t-if="doc.state == 'signed'">
-                             <p><strong>Electronically Signed by:</strong> <span t-field="doc.radiologist_id"/></p>
-                             <p><strong>Date:</strong> <span t-field="doc.signed_at"/></p>
-                        </t>
-                         <t t-else="">
-                             <p><strong>Radiologist:</strong> ____________________________</p>
-                             <p><strong>Signature:</strong> ____________________________</p>
-                         </t>
-                         
-                         <!-- Printed By Tracking - Moved below Signature -->
-                         <p class="text-muted mt-2" style="font-size: 0.8em;">
-                            Printed by <span t-esc="printed_by"/> on <span t-esc="printed_at"/>
-                        </p>
-                    </div>
-                    <div class="col-6 text-right">
+                <div class="signature-block" style="page-break-inside: avoid;">
+                    <div class="row">
+                        <div class="col-7">
+                            <t t-if="doc.state in ('sign', 'complete')">
+                                 <p><strong>Electronically Signed by:</strong><br/>
+                                 <span t-field="doc.radiologist_id.name"/><br/>
+                                 <t t-if="doc.radiologist_id.title">
+                                     <span t-field="doc.radiologist_id.title"/>
+                                 </t>
+                                 <t t-if="doc.radiologist_id.license_number">
+                                     (License: <span t-field="doc.radiologist_id.license_number"/>)
+                                 </t>
+                                 </p>
+                                 <p style="font-size: 0.9em; color: #666;">Signed on <span t-field="doc.signed_at"/></p>
+                            </t>
+                             <t t-else="">
+                                 <p><strong>Radiologist:</strong> ____________________________</p>
+                                 <p><strong>Signature:</strong> ____________________________</p>
+                             </t>
+                        </div>
+                        <div class="col-5 text-right">
+                             <p class="text-muted mt-5" style="font-size: 0.8em;">
+                                Printed by <span t-esc="printed_by"/> on <span t-esc="printed_at"/>
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>
