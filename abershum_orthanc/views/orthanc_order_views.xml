@@ -27,7 +27,7 @@
         <field name="name">orthanc.order.tree</field>
         <field name="model">orthanc.order</field>
         <field name="arch" type="xml">
-            <tree string="Radiology Orders" decoration-info="state == 'draft'" decoration-success="state == 'signed'">
+            <tree string="Radiology Orders" create="false" decoration-info="state == 'draft'" decoration-success="state == 'signed'">
                 <field name="name"/>
                 <field name="sale_order_id"/>
                 <field name="product_id"/>
@@ -44,7 +44,7 @@
         <field name="name">orthanc.order.form</field>
         <field name="model">orthanc.order</field>
         <field name="arch" type="xml">
-            <form string="Radiology Order">
+            <form string="Radiology Order" create="false">
                 <header>
                     <button name="action_open_orthanc" type="object" string="Open in Viewer" class="oe_highlight" icon="fa-desktop"/>
                     <button name="action_sign_report" type="object" string="Sign Report" class="oe_highlight" states="draft" groups="abershum_orthanc.group_radiologist"/>
@@ -72,15 +72,14 @@
                     </group>
                     <notebook>
                         <page string="Radiology Report">
-                            <group string="Findings">
-                                <field name="findings" nolabel="1" placeholder="Enter findings here..." attrs="{'readonly': [('state', '=', 'signed')]}"/>
-                            </group>
-                            <group string="Impression">
-                                <field name="impression" nolabel="1" placeholder="Enter impression here..." attrs="{'readonly': [('state', '=', 'signed')]}"/>
-                            </group>
-                             <group string="Recommendation">
-                                <field name="recommendation" nolabel="1" placeholder="Enter recommendation here..." attrs="{'readonly': [('state', '=', 'signed')]}"/>
-                            </group>
+                            <separator string="Findings"/>
+                            <field name="findings" nolabel="1" placeholder="Enter findings here..." attrs="{'readonly': [('state', '=', 'signed')]}"/>
+                            
+                            <separator string="Impression"/>
+                            <field name="impression" nolabel="1" placeholder="Enter impression here..." attrs="{'readonly': [('state', '=', 'signed')]}"/>
+                            
+                            <separator string="Recommendation"/>
+                            <field name="recommendation" nolabel="1" placeholder="Enter recommendation here..." attrs="{'readonly': [('state', '=', 'signed')]}"/>
                         </page>
                     </notebook>
                 </sheet>

@@ -3,6 +3,8 @@ from odoo import models, fields, api
 import uuid
 import logging
 
+import os
+
 _logger = logging.getLogger(__name__)
 
 class OrthancOrder(models.Model):
@@ -25,8 +27,8 @@ class OrthancOrder(models.Model):
     signed_at = fields.Datetime(string='Signed At', readonly=True, tracking=True)
     state = fields.Selection([
         ('draft', 'Draft'),
-        ('signed', 'Signed'),
-        ('cancelled', 'Cancelled'),
+        ('sign', 'Signed'),
+        ('cancel', 'Cancelled'),
     ], string='Status', default='draft', tracking=True, required=True)
     cancel_reason = fields.Text(string='Cancellation Reason', tracking=True, readonly=True)
 
@@ -59,14 +61,12 @@ class OrthancOrder(models.Model):
 
     def _send_to_orthanc(self):
         self.ensure_one()
-        _logger.info("Sending order %s to Orthanc with Study UUID %s", self.name, self.study_uuid)
-        # Placeholder for actual API call
-        pass
+        self.env['orthanc.service'].create_worklist(self)
 
     def action_open_orthanc(self):
         self.ensure_one()
-        # Retrieve config settings
-        orthanc_url = self.env['ir.config_parameter'].sudo().get_param('abershum_orthanc.orthanc_api_url')
+        # Retrieve config settings (Env var > DB param)
+        orthanc_url = os.environ.get('ORTHANC_URL') or self.env['ir.config_parameter'].sudo().get_param('abershum_orthanc.orthanc_api_url')
         if not orthanc_url:
             return
         
