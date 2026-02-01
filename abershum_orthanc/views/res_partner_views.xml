@@ -8,6 +8,7 @@
             <!-- Ensure name field is first and properly labeled -->
             <xpath expr="//field[@name='name']" position="attributes">
                 <attribute name="string">Name</attribute>
+                <attribute name="default_focus">0</attribute>
             </xpath>
             
             <!-- Label for is_patient checkbox -->
@@ -20,6 +21,11 @@
             <!-- Hide original Reference field -->
             <xpath expr="//field[@name='ref']" position="attributes">
                 <attribute name="invisible">1</attribute>
+            </xpath>
+
+            <!-- Remove autofocus from Contacts & Addresses tab -->
+            <xpath expr="//page[@name='contact_addresses']" position="attributes">
+                <attribute name="autofocus"></attribute>
             </xpath>
 
             <!-- Add Demographics Tab before Contacts -->

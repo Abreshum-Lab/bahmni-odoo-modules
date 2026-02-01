@@ -8,6 +8,7 @@
             <!-- Ensure name field is first and properly labeled -->
             <xpath expr="//field[@name='name']" position="attributes">
                 <attribute name="string">Name</attribute>
+                <attribute name="default_focus">0</attribute>
             </xpath>
             
             <!-- Add customer_rank as invisible field for attrs -->
@@ -22,6 +23,11 @@
             <!-- Hide original Reference field to avoid duplication and editing -->
             <xpath expr="//field[@name='ref']" position="attributes">
                 <attribute name="invisible">1</attribute>
+            </xpath>
+            
+            <!-- Remove autofocus from Contacts & Addresses tab -->
+            <xpath expr="//page[@name='contact_addresses']" position="attributes">
+                <attribute name="autofocus"></attribute>
             </xpath>
             
             <!-- Hide original UUID field if it exists -->
