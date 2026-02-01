@@ -7,7 +7,5 @@
         <field name="report_name">abershum_orthanc.report_radiology_order</field>
         <field name="report_file">abershum_orthanc.report_radiology_order</field>
         <field name="print_report_name">'Radiology_Report_%s' % object.name</field>
-        <field name="binding_model_id" ref="model_orthanc_order"/>
-        <field name="binding_type">report</field>
     </record>
 </odoo>

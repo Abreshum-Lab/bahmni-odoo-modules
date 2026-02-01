@@ -58,6 +58,9 @@ class OrthancOrder(models.Model):
         self.write({'state': 'complete'})
 
     def action_print_report(self):
+        for record in self:
+            if record.state not in ('sign', 'complete'):
+                raise UserError("The report is not signed yet. Click on 'Sign Report' to proceed.")
         return self.env.ref('abershum_orthanc.action_report_radiology_order').report_action(self)
 
     def unlink(self):
