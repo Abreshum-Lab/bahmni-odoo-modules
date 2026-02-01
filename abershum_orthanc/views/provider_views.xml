@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Tree View -->
+    <record id="view_abershum_provider_tree" model="ir.ui.view">
+        <field name="name">abershum.provider.tree</field>
+        <field name="model">abershum.provider</field>
+        <field name="arch" type="xml">
+            <tree string="Providers">
+                <field name="name"/>
+                <field name="title"/>
+                <field name="license_number"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_abershum_provider_form" model="ir.ui.view">
+        <field name="name">abershum.provider.form</field>
+        <field name="model">abershum.provider</field>
+        <field name="arch" type="xml">
+            <form string="Provider">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="title"/>
+                        </group>
+                        <group>
+                            <field name="license_number"/>
+                            <field name="active" invisible="1"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Search View (Active/Archived) -->
+    <record id="view_abershum_provider_search" model="ir.ui.view">
+        <field name="name">abershum.provider.search</field>
+        <field name="model">abershum.provider</field>
+        <field name="arch" type="xml">
+            <search string="Search Providers">
+                <field name="name"/>
+                <field name="title"/>
+                <field name="license_number"/>
+                <filter string="Archived" name="archived" domain="[('active', '=', False)]"/>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_abershum_provider" model="ir.actions.act_window">
+        <field name="name">Providers</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">abershum.provider</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a new Provider
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu Item (Radiology App -> Configuration -> Providers) -->
+    <menuitem id="menu_abershum_provider"
+              name="Providers"
+              parent="menu_radiology_config"
+              action="action_abershum_provider"
+              sequence="20"/>
+</odoo>

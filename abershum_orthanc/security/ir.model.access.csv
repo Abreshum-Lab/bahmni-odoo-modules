@@ -3,3 +3,5 @@ access_radiology_config_settings,res.config.settings,base.model_res_config_setti
 access_orthanc_order_assistant,orthanc.order,model_orthanc_order,group_radiology_assistant,1,1,0,0
 access_orthanc_order_radiologist,orthanc.order,model_orthanc_order,group_radiologist,1,1,0,0
 access_orthanc_order_manager,orthanc.order,model_orthanc_order,base.group_system,1,1,1,1
+access_abershum_provider_manager,abershum.provider,model_abershum_provider,base.group_system,1,1,1,1
+access_abershum_provider_user,abershum.provider,model_abershum_provider,base.group_user,1,0,0,0

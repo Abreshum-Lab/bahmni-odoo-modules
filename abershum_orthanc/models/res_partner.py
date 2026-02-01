@@ -9,12 +9,19 @@ class ResPartner(models.Model):
     _inherit = 'res.partner'
 
     birthdate = fields.Date(string='Date of Birth')
-    age = fields.Integer(string='Age', compute='_compute_age', inverse='_inverse_age', store=False)
+    ref = fields.Char(string='Reference', index=True, copy=False, default=lambda self: 'New')
+
+    # Radiology specific fields
+    is_patient = fields.Boolean(string='Is Patient', default=False, help="Check this box if this contact is a patient.")
+
+    # Demographics
     gender = fields.Selection([
         ('male', 'Male'),
         ('female', 'Female'),
         ('other', 'Other')
     ], string='Gender')
+    age = fields.Integer(string='Age', compute='_compute_age', inverse='_inverse_age', store=False)
+
 
     @api.depends('birthdate')
     def _compute_age(self):

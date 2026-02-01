@@ -5,10 +5,12 @@
         <field name="model">res.partner</field>
         <field name="inherit_id" ref="base.view_partner_form"/>
         <field name="arch" type="xml">
-            <xpath expr="//field[@name='vat']" position="after">
-                <field name="gender"/>
-                <field name="birthdate"/>
-                <field name="age"/>
+            <xpath expr="//field[@name='category_id']" position="after">
+                <field name="is_patient"/>
+                <field name="ref" readonly="1"/>
+                <field name="gender" attrs="{'invisible': [('is_patient', '=', False)]}"/>
+                <field name="birthdate" attrs="{'invisible': [('is_patient', '=', False)]}"/>
+                <field name="age" attrs="{'invisible': [('is_patient', '=', False)]}"/>
             </xpath>
         </field>
     </record>
