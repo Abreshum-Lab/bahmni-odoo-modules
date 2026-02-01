@@ -5,6 +5,11 @@ class SaleOrder(models.Model):
     _inherit = 'sale.order'
 
     provider_id = fields.Many2one('abershum.provider', string='Provider', tracking=True)
+    radiology_priority = fields.Selection([
+        ('stat', 'STAT'),
+        ('urgent', 'URGENT'),
+        ('scheduled', 'SCHEDULED')
+    ], string='Radiology Priority', default='scheduled', tracking=True)
 
     def action_confirm(self):
         res = super(SaleOrder, self).action_confirm()

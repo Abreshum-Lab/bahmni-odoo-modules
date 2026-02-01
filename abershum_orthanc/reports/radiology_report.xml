@@ -9,7 +9,8 @@
                 
                 <div class="row mb-4">
                     <div class="col-6">
-                        <strong>Patient:</strong> <span t-field="doc.sale_order_id.partner_id"/>
+                        <strong>Patient:</strong> <span t-field="doc.sale_order_id.partner_id"/><br/>
+                        <strong>Provider:</strong> <span t-field="doc.sale_order_id.provider_id"/>
                     </div>
                     <div class="col-6 text-right">
                         <strong>Order Ref:</strong> <span t-field="doc.name"/><br/>
@@ -53,12 +54,13 @@
                              <p><strong>Radiologist:</strong> ____________________________</p>
                              <p><strong>Signature:</strong> ____________________________</p>
                          </t>
-                    </div>
-                    <div class="col-6 text-right">
-                         <!-- Printed By Tracking - Passed via Abstract Model -->
-                        <p class="text-muted" style="font-size: 0.8em;">
+                         
+                         <!-- Printed By Tracking - Moved below Signature -->
+                         <p class="text-muted mt-2" style="font-size: 0.8em;">
                             Printed by <span t-esc="printed_by"/> on <span t-esc="printed_at"/>
                         </p>
+                    </div>
+                    <div class="col-6 text-right">
                     </div>
                 </div>
             </div>

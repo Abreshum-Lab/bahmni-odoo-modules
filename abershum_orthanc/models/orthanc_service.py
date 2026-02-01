@@ -75,7 +75,13 @@ class OrthancService(models.AbstractModel):
         term_name = order.product_id.name if order.product_id else 'Radiology Order'
         ds.RequestedProcedureDescription = term_name[:64]
         ds.RequestedProcedureID = f"RP-{order.name}"[:16]
-        ds.RequestedProcedurePriority = 'ROUTINE' 
+        
+        priority_map = {
+            'stat': 'STAT',
+            'urgent': 'HIGH',
+            'scheduled': 'ROUTINE'
+        }
+        ds.RequestedProcedurePriority = priority_map.get(order.sale_order_id.radiology_priority, 'ROUTINE') 
 
         # Scheduled Procedure Step Sequence
         sps = pydicom.dataset.Dataset()

@@ -10,6 +10,7 @@
             </xpath>
             <xpath expr="//field[@name='partner_id']" position="after">
                 <field name="provider_id" options="{'no_quick_create': True}"/>
+                <field name="radiology_priority"/>
             </xpath>
         </field>
     </record>
