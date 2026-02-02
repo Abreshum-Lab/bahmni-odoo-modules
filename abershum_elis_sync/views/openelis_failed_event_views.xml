@@ -32,7 +32,8 @@
                             attrs="{'invisible': [('state', '=', 'success')]}"/>
                     <button name="action_mark_success" string="Mark as Success" type="object" 
                             attrs="{'invisible': [('state', '=', 'success')]}"/>
-                    <button name="action_delete" string="Delete" type="object" class="btn-secondary"/>
+                    <button name="action_delete" string="Delete" type="object" class="btn-secondary" 
+                            confirm="Are you sure you want to delete this failed sync event? This action cannot be undone."/>
                     <field name="state" widget="statusbar" statusbar_visible="pending,retrying,success" readonly="1"/>
                 </header>
                 <sheet>

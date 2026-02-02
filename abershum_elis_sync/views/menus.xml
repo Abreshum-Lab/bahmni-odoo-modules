@@ -8,12 +8,11 @@
         action="bahmni_sale.res_config_settings_action"
         sequence="99"/>
     
-    <!-- Failed Sync Events menu - moved to views file with group restriction -->
+    <!-- Failed Sync Events menu -->
     <menuitem
         id="menu_openelis_failed_events"
         name="Failed Sync Events"
         parent="bahmni_sale.bahmni_menu_root"
         action="action_openelis_failed_event"
-        sequence="100"
-        groups="abershum_elis_sync.group_bahmni_app_admin"/>
+        sequence="100"/>
 </odoo>

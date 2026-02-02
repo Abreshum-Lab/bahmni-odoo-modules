@@ -256,8 +256,9 @@ class OpenELISFailedEvent(models.Model):
                 if not partner:
                     raise UserError(_("Partner not found for this event."))
                 
-                # Call the patient sync method (it's a @api.model method, so call from model)
-                self.env['res.partner']._sync_patient_to_openelis(partner)
+                # Call the patient sync method with a flag to prevent duplicate event creation
+                if not self.env['res.partner'].with_context(is_retry=True)._sync_patient_to_openelis(partner):
+                    raise UserError(_("Patient sync returned failure status. See logs or updated event for details."))
                 
             elif self.event_type == 'test_order':
                 # Retry test order sync
@@ -268,19 +269,20 @@ class OpenELISFailedEvent(models.Model):
                 # Get the sync service and retry - use sync_test_order_to_openelis method
                 sync_service = self.env['openelis.sync.service']
                 # Rebuild payload if needed, or use the stored payload
-                result = sync_service.with_context(sale_order_id=sale_order.id).sync_test_order_to_openelis(sale_order)
+                result = sync_service.with_context(sale_order_id=sale_order.id, is_retry=True).sync_test_order_to_openelis(sale_order)
                 
                 if result.get('status') != 'success':
                     raise UserError(_("Retry failed: %s") % result.get('message', 'Unknown error'))
             
             # If we get here, sync was successful
+            _logger.info(">>> Failed Event Retry: Sync method returned success. Proceeding to set state=success and unlink.")
             self.with_context(allow_system_write=True).write({
                 'state': 'success',
                 'next_retry_date': False,
             })
-            _logger.info("✅ Successfully retried event %s", self.display_name)
             
             # Delete the event after successful sync
+            _logger.info(">>> Failed Event Retry: Unlinking record #%d", self.id)
             self.unlink()
             return True
             
@@ -288,12 +290,15 @@ class OpenELISFailedEvent(models.Model):
             error_msg = str(e)
             error_type = type(e).__name__
             
-            _logger.error("❌ Retry failed for event %s: %s", self.display_name, error_msg)
+            # Calculate next retry date (simple exponential backoff or fixed interval)
+            from datetime import timedelta
+            next_retry = fields.Datetime.now() + timedelta(minutes=15 * (self.retry_count or 1))
             
             self.with_context(allow_system_write=True).write({
                 'state': 'failed',
                 'error_message': error_msg,
                 'error_type': error_type,
+                'next_retry_date': next_retry,
             })
             return False
     
