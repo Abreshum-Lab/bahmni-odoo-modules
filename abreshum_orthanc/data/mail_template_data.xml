@@ -3,11 +3,11 @@
     <data noupdate="1">
         <record id="email_template_radiology_report" model="mail.template">
             <field name="name">Radiology Report - Send by Email</field>
-            <field name="model_id" ref="abershum_orthanc.model_orthanc_order"/>
+            <field name="model_id" ref="abreshum_orthanc.model_orthanc_order"/>
             <field name="subject">Radiology Report Ref {{ object.name }}</field>
             <field name="email_from">{{ user.email_formatted }}</field>
             <field name="partner_to">{{ object.sale_order_id.partner_id.id }}</field>
-            <field name="report_template" ref="abershum_orthanc.action_report_radiology_order"/>
+            <field name="report_template" ref="abreshum_orthanc.action_report_radiology_order"/>
             <field name="report_name">Radiology_Report_{{ (object.name or '').replace('/','_') }}</field>
             <field name="lang">{{ object.sale_order_id.partner_id.lang }}</field>
             <field name="body_html" type="html">

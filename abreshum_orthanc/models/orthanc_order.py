@@ -61,7 +61,7 @@ class OrthancOrder(models.Model):
         for record in self:
             if record.state not in ('sign', 'complete'):
                 raise UserError("The report is not signed yet. Click on 'Sign Report' to proceed.")
-        return self.env.ref('abershum_orthanc.action_report_radiology_order').report_action(self)
+        return self.env.ref('abreshum_orthanc.action_report_radiology_order').report_action(self)
 
     def unlink(self):
         for record in self:
@@ -95,7 +95,7 @@ class OrthancOrder(models.Model):
 
     def action_send_email(self):
         self.ensure_one()
-        template_id = self.env.ref('abershum_orthanc.email_template_radiology_report').id
+        template_id = self.env.ref('abreshum_orthanc.email_template_radiology_report').id
         ctx = {
             'default_model': 'orthanc.order',
             'default_res_id': self.id,
@@ -117,7 +117,7 @@ class OrthancOrder(models.Model):
     def action_open_orthanc(self):
         self.ensure_one()
         # Retrieve config settings (Env var > DB param)
-        orthanc_url = self.env['ir.config_parameter'].sudo().get_param('abershum_orthanc.orthanc_api_url') or os.environ.get('ORTHANC_URL')
+        orthanc_url = self.env['ir.config_parameter'].sudo().get_param('abreshum_orthanc.orthanc_api_url') or os.environ.get('ORTHANC_URL')
         if not orthanc_url:
             return
         

@@ -49,11 +49,11 @@
             <form string="Radiology Order" create="false">
                 <header>
                     <button name="action_open_orthanc" type="object" string="Open in Viewer" class="oe_highlight" icon="fa-desktop"/>
-                    <button name="action_sign_report" type="object" string="Sign Report" class="oe_highlight" states="draft" groups="abershum_orthanc.group_radiologist"/>
-                    <button name="action_complete" type="object" string="Mark Completed" class="oe_highlight" states="sign" groups="abershum_orthanc.group_radiologist"/>
+                    <button name="action_sign_report" type="object" string="Sign Report" class="oe_highlight" states="draft" groups="abreshum_orthanc.group_radiologist"/>
+                    <button name="action_complete" type="object" string="Mark Completed" class="oe_highlight" states="sign" groups="abreshum_orthanc.group_radiologist"/>
                     <button name="action_send_email" type="object" string="Send by Email" icon="fa-envelope" states="sign,complete"/>
-                    <button name="%(action_orthanc_cancel_wizard)d" type="action" string="Cancel Order" states="draft" groups="abershum_orthanc.group_radiologist"/>
-                    <button name="action_reset_draft" type="object" string="Reset to Draft" states="sign" groups="abershum_orthanc.group_radiologist"/>
+                    <button name="%(action_orthanc_cancel_wizard)d" type="action" string="Cancel Order" states="draft" groups="abreshum_orthanc.group_radiologist"/>
+                    <button name="action_reset_draft" type="object" string="Reset to Draft" states="sign" groups="abreshum_orthanc.group_radiologist"/>
                     <button name="action_print_report" type="object" string="Print Report" icon="fa-print" states="sign,complete"/>
                     <field name="state" widget="statusbar" statusbar_visible="draft,sign,complete"/>
                 </header>
@@ -116,7 +116,7 @@
     <!-- Top Level Menu -->
     <menuitem id="menu_radiology_root" 
               name="Radiology" 
-              web_icon="abershum_orthanc,static/description/icon.png" 
+              web_icon="abreshum_orthanc,static/description/icon.png" 
               sequence="10"/>
 
     <menuitem id="menu_radiology_orders"

@@ -5,7 +5,7 @@ from datetime import datetime
 import pytz
 
 class ReportRadiologyOrder(models.AbstractModel):
-    _name = 'report.abershum_orthanc.report_radiology_order'
+    _name = 'report.abreshum_orthanc.report_radiology_order'
     _description = 'Radiology Report Logic'
 
     @api.model

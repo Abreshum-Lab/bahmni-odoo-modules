@@ -7,7 +7,7 @@
         <field name="inherit_id" ref="base.res_config_settings_view_form"/>
         <field name="arch" type="xml">
             <xpath expr="//div[hasclass('settings')]" position="inside">
-                <div class="app_settings_block" data-string="Radiology" string="Radiology" data-key="abershum_orthanc" groups="base.group_system">
+                <div class="app_settings_block" data-string="Radiology" string="Radiology" data-key="abreshum_orthanc" groups="base.group_system">
                     <h2>Orthanc Server Configuration</h2>
                     <div class="row mt16 o_settings_container">
                         <div class="col-12 col-lg-6 o_setting_box">
@@ -51,7 +51,7 @@
         <field name="res_model">res.config.settings</field>
         <field name="view_mode">form</field>
         <field name="target">inline</field>
-        <field name="context">{'module' : 'abershum_orthanc'}</field>
+        <field name="context">{'module' : 'abreshum_orthanc'}</field>
     </record>
 
     <menuitem id="menu_radiology_config_settings"
