@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="product_template_form_view_inherit_elis" model="ir.ui.view">
+        <field name="name">product.template.form.inherit.elis</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_only_form_view"/>
+        <field name="arch" type="xml">
+            <!-- Add is_lab_test and is_panel check-boxes to the main area -->
+            <xpath expr="//div[@name='options']" position="inside">
+                <span class="d-inline-block">
+                    <field name="is_lab_test"/>
+                    <label for="is_lab_test"/>
+                </span>
+                <span class="d-inline-block">
+                    <field name="is_panel"/>
+                    <label for="is_panel"/>
+                </span>
+            </xpath>
+
+            <!-- Add OpenELIS Lab Info tab -->
+            <xpath expr="//notebook" position="inside">
+                <page string="OpenELIS Lab Info" attrs="{'invisible': [('is_lab_test', '=', False), ('is_panel', '=', False)]}">
+                    <group>
+                        <group string="Basic Configuration">
+                            <field name="elis_department" placeholder="e.g. Hematology" attrs="{'required': [('is_panel', '=', False), ('is_lab_test', '=', True)]}"/>
+                            <field name="elis_sample_type" placeholder="e.g. Blood" attrs="{'required': ['|', ('is_lab_test', '=', True), ('is_panel', '=', True)]}"/>
+                            <field name="elis_result_type" attrs="{'invisible': [('is_panel', '=', True)]}"/>
+                            <field name="elis_sort_order"/>
+                        </group>
+                        <group string="Technical Details" attrs="{'invisible': [('is_panel', '=', True)]}">
+                            <field name="elis_uom" placeholder="e.g. mg/dL"/>
+                            <field name="elis_loinc" placeholder="e.g. 12345-6"/>
+                        </group>
+                    </group>
+                    <group string="Panel Configuration" attrs="{'invisible': [('is_panel', '=', False)]}">
+                        <field name="panel_test_ids" widget="many2many_tags" attrs="{'required': [('is_panel', '=', True)]}"/>
+                    </group>
+                    <group string="Reference Range Information" attrs="{'invisible': [('is_panel', '=', True)]}" col="1">
+                        <field name="elis_reference_range" nolabel="0" placeholder="Enter reference range details here..."/>
+                    </group>
+                    <div class="oe_grey">
+                        <p>These fields are synchronized with OpenELIS to create and maintain lab tests.</p>
+                        <button name="action_sync_to_openelis" string="Sync to OpenELIS Now" type="object" class="btn-secondary"/>
+                    </div>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Inherit tree view to show is_lab_test status -->
+    <record id="product_template_tree_view_inherit_elis" model="ir.ui.view">
+        <field name="name">product.template.tree.inherit.elis</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_tree_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='name']" position="after">
+                <field name="is_lab_test" optional="show"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Add search filter for lab tests to product.template -->
+    <record id="product_template_search_view_inherit_elis" model="ir.ui.view">
+        <field name="name">product.template.search.inherit.elis</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_search_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//filter[@name='filter_to_sell']" position="before">
+                <filter string="Lab Tests" name="lab_tests" domain="[('is_lab_test', '=', True)]"/>
+                <separator/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- PRODUCT.PRODUCT VIEWS -->
+
+    <!-- Inherit product.product form view -->
+    <record id="product_normal_form_view_inherit_elis" model="ir.ui.view">
+        <field name="name">product.product.form.inherit.elis</field>
+        <field name="model">product.product</field>
+        <field name="inherit_id" ref="product.product_normal_form_view"/>
+        <field name="arch" type="xml">
+            <!-- Add is_lab_test and is_panel check-boxes -->
+            <xpath expr="//div[@name='options']" position="inside">
+                <span class="d-inline-block">
+                    <field name="is_lab_test"/>
+                    <label for="is_lab_test"/>
+                </span>
+                <span class="d-inline-block">
+                    <field name="is_panel"/>
+                    <label for="is_panel"/>
+                </span>
+            </xpath>
+
+            <!-- Add OpenELIS Lab Info tab -->
+            <xpath expr="//notebook" position="inside">
+                <page string="OpenELIS Lab Info" attrs="{'invisible': [('is_lab_test', '=', False), ('is_panel', '=', False)]}">
+                    <group>
+                        <group string="Basic Configuration">
+                            <field name="elis_department" placeholder="e.g. Hematology" attrs="{'required': [('is_panel', '=', False), ('is_lab_test', '=', True)]}"/>
+                            <field name="elis_sample_type" placeholder="e.g. Blood" attrs="{'required': ['|', ('is_lab_test', '=', True), ('is_panel', '=', True)]}"/>
+                            <field name="elis_result_type" attrs="{'invisible': [('is_panel', '=', True)]}"/>
+                            <field name="elis_sort_order"/>
+                        </group>
+                        <group string="Technical Details" attrs="{'invisible': [('is_panel', '=', True)]}">
+                            <field name="elis_uom" placeholder="e.g. mg/dL"/>
+                            <field name="elis_loinc" placeholder="e.g. 12345-6"/>
+                        </group>
+                    </group>
+                    <group string="Panel Configuration" attrs="{'invisible': [('is_panel', '=', False)]}">
+                        <field name="panel_test_ids" widget="many2many_tags" attrs="{'required': [('is_panel', '=', True)]}"/>
+                    </group>
+                    <group string="Reference Range Information" attrs="{'invisible': [('is_panel', '=', True)]}">
+                        <field name="elis_reference_range" nolabel="1" placeholder="Enter reference range details here..."/>
+                    </group>
+                    <div class="oe_grey">
+                        <p>These fields are synchronized with OpenELIS to create and maintain lab tests.</p>
+                        <button name="action_sync_to_openelis" string="Sync to OpenELIS Now" type="object" class="btn-secondary"/>
+                    </div>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Inherit product.product search view -->
+    <record id="product_search_form_view_inherit_elis" model="ir.ui.view">
+        <field name="name">product.product.search.inherit.elis</field>
+        <field name="model">product.product</field>
+        <field name="inherit_id" ref="product.product_search_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//filter[@name='filter_to_sell']" position="before">
+                <filter string="Lab Tests" name="lab_tests" domain="[('is_lab_test', '=', True)]"/>
+                <separator/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

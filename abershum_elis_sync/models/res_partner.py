@@ -217,18 +217,9 @@ class ResPartner(models.Model):
             }
         }
 
-        # 3. URL Normalization
+        # 3. Request URL preparation
         if not api_url.startswith(('http://', 'https://')):
             api_url = 'http://' + api_url.lstrip('/')
-        
-        # Replace localhost if in Docker
-        import socket
-        try:
-            socket.gethostbyname('openelis')
-            import re
-            api_url = re.sub(r'localhost(:\d+)?', 'openelis:8052', api_url, flags=re.IGNORECASE)
-        except:
-            pass
             
         url = api_url.rstrip('/') + '/rest/odoo/patient'
         
