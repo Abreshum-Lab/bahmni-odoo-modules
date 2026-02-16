@@ -28,12 +28,12 @@
         'views/sale_order_views.xml',
         'views/res_config_settings_views.xml',
         'data/ir_sequence_data.xml',
-        'data/mail_template_data.xml',
         'views/product_views.xml',
         'views/res_partner_views.xml',
         'views/provider_views.xml',
         'reports/radiology_report.xml',
         'reports/report_actions.xml',
+        'data/mail_template_data.xml',  # Must load after report_actions.xml
     ],
     'installable': True,
     'application': True,
