@@ -29,6 +29,8 @@
         <field name="model">orthanc.order</field>
         <field name="arch" type="xml">
             <tree string="Radiology Orders" create="false" decoration-info="state == 'draft'" decoration-warning="state == 'failed'" decoration-success="state in ('sign', 'complete')">
+                <field name="patient_identifier"/>
+                <field name="patient_id"/>
                 <field name="name"/>
                 <field name="sale_order_id"/>
                 <field name="product_id"/>
@@ -66,6 +68,8 @@
                     </div>
                     <group>
                         <group>
+                            <field name="patient_identifier"/>
+                            <field name="patient_id"/>
                             <field name="sale_order_id"/>
                             <field name="product_id"/>
                             <field name="cancel_reason" attrs="{'invisible': [('state', '!=', 'cancelled')]}" class="text-danger"/>

@@ -3,6 +3,7 @@ from odoo import models, fields, api
 from odoo.exceptions import UserError
 import uuid
 import logging
+import pydicom.uid
 
 import os
 
@@ -16,6 +17,8 @@ class OrthancOrder(models.Model):
 
     name = fields.Char(string='Order Reference', required=True, copy=False, readonly=True, index=True, default=lambda self: ('New'))
     sale_order_id = fields.Many2one('sale.order', string='Sale Order', readonly=True)
+    patient_id = fields.Many2one('res.partner', related='sale_order_id.partner_id', string='Patient', readonly=True, store=True)
+    patient_identifier = fields.Char(related='sale_order_id.partner_id.ref', string='Patient ID', readonly=True)
     product_id = fields.Many2one('product.product', string='Service', readonly=True)
     study_uuid = fields.Char(string='Study UUID', readonly=True, copy=False)
     
@@ -77,7 +80,7 @@ class OrthancOrder(models.Model):
         if vals.get('name', 'New') == 'New':
             vals['name'] = self.env['ir.sequence'].next_by_code('orthanc.order') or 'New'
         if not vals.get('study_uuid'):
-            vals['study_uuid'] = str(uuid.uuid4())
+            vals['study_uuid'] = pydicom.uid.generate_uid()
         return super(OrthancOrder, self).create(vals)
 
     def write(self, vals):

@@ -70,7 +70,7 @@ class OrthancService(models.AbstractModel):
                  ds.PatientSex = 'O' # Default to Other
 
         # Study Instance UID
-        ds.StudyInstanceUID = generate_uid() 
+        ds.StudyInstanceUID = order.study_uuid
 
         # Requested Procedure
         term_name = order.product_id.name if order.product_id else 'Radiology Order'
