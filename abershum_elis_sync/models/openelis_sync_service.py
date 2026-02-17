@@ -41,13 +41,13 @@ class OpenELISSyncService(models.Model):
                 # Fallback to searching if UUID field name is different or missing
                 if not test_uuids:
                     # In some Bahmni setups, UUID might be in a Different field or 
-                    # we might need to use other identifiers. We'll use product.id as fallback 
+                    # we might need to use other identifiers. We'll use product.uuid as fallback 
                     # but OpenELIS expects UUIDs for linking.
                     test_uuids = [p.uuid for p in product.panel_test_ids if p.uuid]
 
             # Build payload
             payload = {
-                'id': product.id,
+                'id': product.uuid,
                 'name': product.name,
                 'code': product.default_code or '',
                 'description': product.description_sale or '',
@@ -104,44 +104,16 @@ class OpenELISSyncService(models.Model):
             _logger.warning("Sale order %s has no customer/patient, skipping sync", sale_order.name)
             return {'status': 'skipped', 'message': 'No customer/patient'}
 
-        # Filter order lines that are lab tests or panels
-        lab_test_lines = []
-        for line in sale_order.order_line:
-            product = line.product_id.product_tmpl_id
-            if product.is_lab_test or product.is_panel:
-                lab_test_lines.append(line)
-
-        if not lab_test_lines:
-            _logger.debug("Sale order %s has no lab test products, skipping sync", sale_order.name)
-            return {'status': 'skipped', 'message': 'No lab test products in order'}
-
         try:
-            # Build payload
-            payload = {
-                'sale_order_id': str(sale_order.id),
-                'sale_order_name': sale_order.name,
-                'order_date': sale_order.date_order.strftime('%Y-%m-%d') if sale_order.date_order else '',
-                'patient': {
-                    'uuid': sale_order.partner_id.uuid if hasattr(sale_order.partner_id, 'uuid') and sale_order.partner_id.uuid else '',
-                    'ref': sale_order.partner_id.ref or '',
-                    'name': sale_order.partner_id.name or '',
-                    'birthdate': sale_order.partner_id.birthdate_date.strftime('%Y-%m-%d') if hasattr(sale_order.partner_id, 'birthdate_date') and sale_order.partner_id.birthdate_date else '',
-                    'gender': sale_order.partner_id.gender if hasattr(sale_order.partner_id, 'gender') else '',
-                },
-                'order_lines': []
-            }
+            # Filter order lines that are lab tests or panels
+            lab_test_lines = self._get_lab_test_order_lines(sale_order)
 
-            # Add order lines
-            for line in lab_test_lines:
-                product = line.product_id.product_tmpl_id
-                order_line_data = {
-                    'product_uuid': str(product.id),  # Using product ID as UUID for external reference
-                    'product_name': product.name,
-                    'product_type': 'Panel' if product.is_panel else 'Test',
-                    'quantity': line.product_uom_qty,
-                    'comment': line.name or ''  # Order line description as comment
-                }
-                payload['order_lines'].append(order_line_data)
+            if not lab_test_lines:
+                _logger.debug("Sale order %s has no lab test products, skipping sync", sale_order.name)
+                return {'status': 'skipped', 'message': 'No lab test products in order'}
+
+            # Build payload
+            payload = self._build_payload(sale_order, lab_test_lines)
 
             # Call OpenELIS API
             response = self._call_openelis_api(payload, endpoint='/rest/odoo/test-order', event_type='test_order')
@@ -247,11 +219,12 @@ class OpenELISSyncService(models.Model):
         order_lines = []
         for line in lab_test_lines:
             product = line.product_id
-            product_type = 'Panel' if product.categ_id.name == 'Panel' else 'Test'
+            template = product.product_tmpl_id
+            product_type = 'Panel' if template.categ_id.name == 'Panel' or template.is_panel else 'Test'
             
             order_line = {
-                'product_uuid': product.uuid or '',
-                'product_name': product.name or '',
+                'product_uuid': template.uuid or '',
+                'product_name': template.name or '',
                 'product_type': product_type,
                 'quantity': line.product_uom_qty or 1.0,
                 'comment': line.name or ''
@@ -298,6 +271,7 @@ class OpenELISSyncService(models.Model):
         _logger.info("Authentication: %s", "Basic Auth (username: %s)" % api_username if (api_username and api_password) else "None")
         _logger.info("Timeout: 30 seconds")
         _logger.info("SSL Verification: Disabled")
+        _logger.info("JSON Body: %s", json.dumps(payload, indent=2))
         _logger.info("Payload Summary:")
         if event_type == 'test_order':
             _logger.info("  Sale Order ID: %s", payload.get('sale_order_id', 'N/A'))
