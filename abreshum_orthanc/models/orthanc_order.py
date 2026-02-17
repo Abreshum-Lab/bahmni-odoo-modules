@@ -28,11 +28,14 @@ class OrthancOrder(models.Model):
     signed_at = fields.Datetime(string='Signed At', readonly=True, tracking=True)
     state = fields.Selection([
         ('draft', 'Draft'),
+        ('sent', 'Sent to Orthanc'),
+        ('failed', 'Sync Failed'),
         ('sign', 'Signed'),
         ('complete', 'Completed'),
         ('cancel', 'Cancelled'),
     ], string='Status', default='draft', tracking=True, required=True)
     cancel_reason = fields.Text(string='Cancellation Reason', tracking=True, readonly=True)
+    log_ids = fields.One2many('orthanc.log', 'order_id', string='Communication Logs')
 
     def action_sign_report(self):
         self.ensure_one()
@@ -89,9 +92,30 @@ class OrthancOrder(models.Model):
         return super(OrthancOrder, self).write(vals)
 
 
-    def _send_to_orthanc(self):
+    def action_send_to_orthanc(self):
         self.ensure_one()
-        self.env['orthanc.service'].create_worklist(self)
+        try:
+            self.env['orthanc.service'].create_worklist(self)
+            self.write({'state': 'sent'})
+            self.env['orthanc.log'].create({
+                'order_id': self.id,
+                'state': 'success',
+                'message': 'Worklist successfully created and sent to Orthanc storage.'
+            })
+        except Exception as e:
+            self.write({'state': 'failed'})
+            self.env['orthanc.log'].create({
+                'order_id': self.id,
+                'state': 'error',
+                'message': str(e)
+            })
+            _logger.error("Failed to send order %s to Orthanc: %s", self.name, e)
+
+    def action_retry_send(self):
+        self.action_send_to_orthanc()
+
+    def _send_to_orthanc(self):
+        self.action_send_to_orthanc()
 
     def action_send_email(self):
         self.ensure_one()
@@ -121,14 +145,29 @@ class OrthancOrder(models.Model):
         if not orthanc_url:
             return
         
-        # target_url = f"{orthanc_url.rstrip('/')}/app/explorer.html#study?uuid={self.study_uuid}"
-        
+        # Ensure URL is absolute to prevent Odoo from prepending its own address
+        base_url = orthanc_url.rstrip('/')
+        if not base_url.startswith(('http://', 'https://')):
+            base_url = f"http://{base_url}"
+
         # OHIF Viewer Link
-        # Note: OHIF typically expects StudyInstanceUID, but our self.study_uuid is effectively acting as the StudyInstanceUID in generation
-        target_url = f"{orthanc_url.rstrip('/')}/ohif/viewer?StudyInstanceUIDs={self.study_uuid}"
+        target_url = f"{base_url}/ohif/viewer?StudyInstanceUIDs={self.study_uuid}"
         
         return {
             'type': 'ir.actions.act_url',
             'url': target_url,
             'target': 'new',
         }
+
+class OrthancLog(models.Model):
+    _name = 'orthanc.log'
+    _description = 'Orthanc Communication Log'
+    _order = 'create_date desc'
+
+    order_id = fields.Many2one('orthanc.order', string='Order', required=True, ondelete='cascade')
+    state = fields.Selection([
+        ('success', 'Success'),
+        ('error', 'Error'),
+    ], string='Status', required=True)
+    message = fields.Text(string='Log Message')
+    create_date = fields.Datetime(string='Timestamp', readonly=True)

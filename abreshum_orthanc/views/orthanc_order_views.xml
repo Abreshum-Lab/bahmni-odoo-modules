@@ -28,13 +28,13 @@
         <field name="name">orthanc.order.tree</field>
         <field name="model">orthanc.order</field>
         <field name="arch" type="xml">
-            <tree string="Radiology Orders" create="false" decoration-info="state == 'draft'" decoration-success="state == 'signed'">
+            <tree string="Radiology Orders" create="false" decoration-info="state == 'draft'" decoration-warning="state == 'failed'" decoration-success="state in ('sign', 'complete')">
                 <field name="name"/>
                 <field name="sale_order_id"/>
                 <field name="product_id"/>
                 <field name="radiologist_id"/>
                 <field name="signed_at" optional="hide"/>
-                <field name="state" widget="badge" decoration-info="state == 'draft'" decoration-success="state in ('sign', 'complete')"/>
+                <field name="state" widget="badge" decoration-info="state == 'draft'" decoration-warning="state == 'failed'" decoration-muted="state == 'sent'" decoration-success="state in ('sign', 'complete')"/>
                 <button name="action_open_orthanc" type="object" string="View Image" icon="fa-eye" class="btn-primary"/>
                 <button name="action_print_report" type="object" string="Print" icon="fa-print" class="btn-secondary" attrs="{'invisible': [('state', 'not in', ('sign', 'complete'))]}"/>
             </tree>
@@ -49,13 +49,14 @@
             <form string="Radiology Order" create="false">
                 <header>
                     <button name="action_open_orthanc" type="object" string="Open in Viewer" class="oe_highlight" icon="fa-desktop"/>
-                    <button name="action_sign_report" type="object" string="Sign Report" class="oe_highlight" states="draft" groups="abreshum_orthanc.group_radiologist"/>
+                    <button name="action_retry_send" type="object" string="Send to Orthanc" class="oe_highlight" attrs="{'invisible': [('state', 'not in', ('draft', 'failed'))]}" icon="fa-refresh"/>
+                    <button name="action_sign_report" type="object" string="Sign Report" class="oe_highlight" states="sent" groups="abreshum_orthanc.group_radiologist"/>
                     <button name="action_complete" type="object" string="Mark Completed" class="oe_highlight" states="sign" groups="abreshum_orthanc.group_radiologist"/>
                     <button name="action_send_email" type="object" string="Send by Email" icon="fa-envelope" states="sign,complete"/>
-                    <button name="%(action_orthanc_cancel_wizard)d" type="action" string="Cancel Order" states="draft" groups="abreshum_orthanc.group_radiologist"/>
-                    <button name="action_reset_draft" type="object" string="Reset to Draft" states="sign" groups="abreshum_orthanc.group_radiologist"/>
+                    <button name="%(action_orthanc_cancel_wizard)d" type="action" string="Cancel Order" states="draft,failed,sent" groups="abreshum_orthanc.group_radiologist"/>
+                    <button name="action_reset_draft" type="object" string="Reset to Draft" states="sign,failed,sent" groups="abreshum_orthanc.group_radiologist"/>
                     <button name="action_print_report" type="object" string="Print Report" icon="fa-print" states="sign,complete"/>
-                    <field name="state" widget="statusbar" statusbar_visible="draft,sign,complete"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,sent,sign,complete"/>
                 </header>
                 <sheet>
                     <div class="oe_title">
@@ -85,6 +86,15 @@
                             
                             <separator string="Recommendation"/>
                             <field name="recommendation" nolabel="1" placeholder="Enter recommendation here..." attrs="{'readonly': [('state', 'in', ('sign', 'complete', 'cancel'))]}"/>
+                        </page>
+                        <page string="Communication Logs">
+                            <field name="log_ids" readonly="1">
+                                <tree decoration-danger="state == 'error'" decoration-success="state == 'success'">
+                                    <field name="create_date" string="Time"/>
+                                    <field name="state" widget="badge" decoration-danger="state == 'error'" decoration-success="state == 'success'"/>
+                                    <field name="message"/>
+                                </tree>
+                            </field>
                         </page>
                     </notebook>
                 </sheet>

@@ -5,3 +5,6 @@ access_orthanc_order_radiologist,orthanc.order,model_orthanc_order,group_radiolo
 access_orthanc_order_manager,orthanc.order,model_orthanc_order,base.group_system,1,1,1,1
 access_abershum_provider_manager,abershum.provider,model_abershum_provider,base.group_system,1,1,1,1
 access_abershum_provider_user,abershum.provider,model_abershum_provider,base.group_user,1,0,0,0
+access_orthanc_log_assistant,orthanc.log,model_orthanc_log,group_radiology_assistant,1,0,1,0
+access_orthanc_log_radiologist,orthanc.log,model_orthanc_log,group_radiologist,1,0,1,0
+access_orthanc_log_manager,orthanc.log,model_orthanc_log,base.group_system,1,1,1,1

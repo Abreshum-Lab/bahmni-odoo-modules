@@ -24,8 +24,7 @@ class OrthancService(models.AbstractModel):
         # Orthanc worklist directory (mounted volume)
         worklist_dir = os.environ.get('ORTHANC_WORKLIST_PATH') or '/opt/bahmni-erp/orthanc/worklists'
         if not os.path.exists(worklist_dir):
-            _logger.error("Worklist directory %s does not exist.", worklist_dir)
-            return
+            raise Exception(f"Worklist directory {worklist_dir} does not exist. Please check ORTHANC_WORKLIST_PATH setting.")
 
         # Create DICOM Dataset
         file_meta = pydicom.dataset.FileMetaDataset()
