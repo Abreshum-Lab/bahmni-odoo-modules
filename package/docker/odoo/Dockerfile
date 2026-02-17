@@ -23,7 +23,6 @@ COPY openerp7_data_import ${ADDON_PATH}/openerp7_data_import/
 COPY odoo10_data_import ${ADDON_PATH}/odoo10_data_import/
 COPY bahmni_reports ${ADDON_PATH}/bahmni_reports
 COPY bahmni_customer_return ${ADDON_PATH}/bahmni_customer_return
-COPY abershum_elis_sync ${ADDON_PATH}/abershum-elis-sync/
 COPY community_modules ${ADDON_PATH}/community_modules/
 COPY package/resources/data/address.seed.csv ${ADDON_PATH}/bahmni_initializer/data/
 COPY package/resources/data/uom_seed.xml ${ADDON_PATH}/bahmni_initializer/data/
