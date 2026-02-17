@@ -229,6 +229,7 @@ class OpenELISSyncService(models.Model):
             'gender': patient.gender or '',
             'primary_relative': patient.primary_relative or '',
             'occupation': patient.occupation or '',
+            'age': patient.age if patient.age else 0,
             'address': {
                 'street': (patient.street or '')[:30],
                 'city': (patient.city or '')[:30],

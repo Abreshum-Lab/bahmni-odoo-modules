@@ -134,4 +134,23 @@
             </xpath>
         </field>
     </record>
+    <record id="action_mark_as_lab_test" model="ir.actions.server">
+        <field name="name">Mark as Lab Test</field>
+        <field name="model_id" ref="product.model_product_template"/>
+        <field name="binding_model_id" ref="product.model_product_template"/>
+        <field name="state">code</field>
+        <field name="code">
+            records.write({'is_lab_test': True})
+        </field>
+    </record>
+
+    <record id="action_mark_as_lab_panel" model="ir.actions.server">
+        <field name="name">Mark as Lab Panel</field>
+        <field name="model_id" ref="product.model_product_template"/>
+        <field name="binding_model_id" ref="product.model_product_template"/>
+        <field name="state">code</field>
+        <field name="code">
+            records.write({'is_panel': True})
+        </field>
+    </record>
 </odoo>

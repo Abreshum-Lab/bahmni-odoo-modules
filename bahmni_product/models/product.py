@@ -49,8 +49,9 @@ class ProductProduct(models.Model):
     def write(self, vals):
         res = super(ProductProduct, self).write(vals)
         if vals.get('mrp') and not self._context.get('write_through_tmpl'):
-            if len(self.product_tmpl_id.product_variant_ids) == 1:
-                self.product_tmpl_id.mrp = vals.get('mrp')
+            for record in self:
+                if len(record.product_tmpl_id.product_variant_ids) == 1:
+                    record.product_tmpl_id.mrp = vals.get('mrp')
         return res
 
     def name_get(self):
@@ -98,11 +99,11 @@ class ProductTemplate(models.Model):
     def write(self, vals):
         '''this method is inherited to set mrp price in product.product record 
         when changed in product.template, in case of no variants defined'''
-        self.ensure_one()
         res = super(ProductTemplate, self).write(vals)
         if vals.get('mrp'):
-            if len(self.product_variant_ids) == 1:
-                # context passed while calling write of product_product,
-                # as write method of product_product is also overridden to do same thing, hence to avoid recursion
-                self.product_variant_ids.with_context({'write_through_tmpl': True}).write({'mrp': vals.get('mrp')})
+            for record in self:
+                if len(record.product_variant_ids) == 1:
+                    # context passed while calling write of product_product,
+                    # as write method of product_product is also overridden to do same thing, hence to avoid recursion
+                    record.product_variant_ids.with_context({'write_through_tmpl': True}).write({'mrp': vals.get('mrp')})
         return res

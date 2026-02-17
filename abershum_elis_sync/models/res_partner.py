@@ -213,8 +213,10 @@ class ResPartner(models.Model):
                 'city': partner.city or '',
                 'zip': partner.zip or '',
                 'state': partner.state_id.name or '',
+                'state': partner.state_id.name or '',
                 'country': partner.country_id.name or ''
-            }
+            },
+            'age': partner.age if partner.age else 0
         }
 
         # 3. Request URL preparation

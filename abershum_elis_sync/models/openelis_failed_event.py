@@ -293,6 +293,27 @@ class OpenELISFailedEvent(models.Model):
                 if result.get('status') != 'success':
                     raise UserError(_("Retry failed: %s") % result.get('message', 'Unknown error'))
             
+            elif self.event_type == 'lab_test':
+                # Retry lab test sync
+                product_id = payload_dict.get('id')
+                if not product_id:
+                    raise UserError(_("Product ID not found in payload."))
+                
+                # We assume product.template as that's what the sync service expects/uses mostly
+                product = self.env['product.template'].browse(product_id)
+                if not product.exists():
+                    raise UserError(_("Product not found (ID: %s)") % product_id)
+                
+                sync_service = self.env['openelis.sync.service']
+                result = sync_service.sync_lab_test_to_openelis(product)
+                
+                if result.get('status') != 'success':
+                     raise UserError(_("Retry failed: %s") % result.get('message', 'Unknown error'))
+
+            else:
+                 # Logic missing for this event type
+                 raise UserError(_("Retry logic missing for event type '%s'. (500 Server Error)") % self.event_type)
+            
             # If we get here, sync was successful
             _logger.info(">>> Failed Event Retry: Sync method returned success. Proceeding to set state=success and unlink.")
             self.with_context(allow_system_write=True).write({
