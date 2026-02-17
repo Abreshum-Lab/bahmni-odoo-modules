@@ -64,6 +64,11 @@ class ProductTemplate(models.Model):
 
     @api.model
     def create(self, vals):
+        # Generate UUID if not present and product is lab test/panel
+        if (vals.get('is_lab_test') or vals.get('is_panel')) and not vals.get('uuid'):
+            import uuid
+            vals['uuid'] = str(uuid.uuid4())
+            
         product = super(ProductTemplate, self).create(vals)
         if self._is_lab_test(product):
             try:
@@ -73,13 +78,20 @@ class ProductTemplate(models.Model):
         return product
 
     def write(self, vals):
+        # Generate UUID if missing when updating to lab test/panel
+        if vals.get('is_lab_test') or vals.get('is_panel'):
+            for product in self:
+                if not product.uuid:
+                     import uuid
+                     product.uuid = str(uuid.uuid4())
+
         result = super(ProductTemplate, self).write(vals)
         # Check if any relevant fields changed
         relevant_fields = [
             'name', 'default_code', 'description_sale', 'categ_id', 'active', 'list_price',
             'is_lab_test', 'elis_department', 'elis_sample_type', 'elis_result_type', 
             'elis_uom', 'elis_reference_range', 'elis_loinc', 'elis_sort_order',
-            'is_panel', 'panel_test_ids'
+            'is_panel', 'panel_test_ids', 'uuid'
         ]
         if any(field in vals for field in relevant_fields):
             for product in self:

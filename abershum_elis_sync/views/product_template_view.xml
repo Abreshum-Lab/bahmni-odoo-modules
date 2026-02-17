@@ -22,6 +22,7 @@
                 <page string="OpenELIS Lab Info" attrs="{'invisible': [('is_lab_test', '=', False), ('is_panel', '=', False)]}">
                     <group>
                         <group string="Basic Configuration">
+                            <field name="uuid" readonly="1"/>
                             <field name="elis_department" placeholder="e.g. Hematology" attrs="{'required': [('is_panel', '=', False), ('is_lab_test', '=', True)]}"/>
                             <field name="elis_sample_type" placeholder="e.g. Blood" attrs="{'required': ['|', ('is_lab_test', '=', True), ('is_panel', '=', True)]}"/>
                             <field name="elis_result_type" attrs="{'invisible': [('is_panel', '=', True)]}"/>

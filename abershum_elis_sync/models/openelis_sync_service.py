@@ -68,6 +68,10 @@ class OpenELISSyncService(models.Model):
                 'test_uuids': test_uuids
             }
             
+            # Use UUID if available, otherwise fallback to ID (but OpenELIS prefers UUID)
+            product_id = product.uuid if product.uuid else str(product.id)
+            payload['id'] = product_id
+
             # Call OpenELIS API
             response = self._call_openelis_api(payload, endpoint='/rest/odoo/test', event_type='lab_test')
             
