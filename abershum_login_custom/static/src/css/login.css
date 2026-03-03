@@ -38,7 +38,7 @@
 }
 
 .abreshum-brand-logo .brand-accent {
-    color: #3b82f6;
+    color: #4263eb;
 }
 
 /* Modern Form Inputs */
@@ -51,8 +51,8 @@
 }
 
 .oe_login_form .form-control:focus {
-    border-color: #3b82f6 !important;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12) !important;
+    border-color: #4263eb !important;
+    box-shadow: 0 0 0 3px rgba(66, 99, 235, 0.12) !important;
     outline: none !important;
 }
 
@@ -73,14 +73,14 @@
     padding: 12px 24px !important;
     font-weight: 500 !important;
     font-size: 15px !important;
-    background-color: #3b82f6 !important;
-    border-color: #3b82f6 !important;
-    transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.1s ease !important;
+    background: linear-gradient(#4263eb, #3b5fd4) !important;
+    border-color: #3b5fd4 !important;
+    transition: background 0.2s ease, border-color 0.2s ease, transform 0.1s ease !important;
 }
 
 .oe_login_form .btn-primary:hover {
-    background-color: #2563eb !important;
-    border-color: #2563eb !important;
+    background: #3b5fd4 !important;
+    border-color: #2d4fc4 !important;
 }
 
 .oe_login_form .btn-primary:active {

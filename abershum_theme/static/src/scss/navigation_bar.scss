@@ -1,0 +1,74 @@
+// Abershum Theme - Navigation Bar Styling
+
+.o_main_navbar {
+    background-color: $primary_color !important;
+    border-bottom: 1px solid $primary_dark;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.o_main_navbar .o_menu_brand {
+    color: $text_primary !important;
+    font-weight: 600;
+    font-size: 16px;
+}
+
+.o_main_navbar .o_navbar_apps_menu > a {
+    color: $text_secondary !important;
+    transition: color 0.2s ease;
+}
+
+.o_main_navbar .o_navbar_apps_menu > a:hover {
+    color: $text_primary !important;
+}
+
+.o_main_navbar .o_menu_sections li a {
+    color: $text_secondary !important;
+    transition: all 0.2s ease;
+    padding: 8px 14px;
+    border-radius: 6px;
+}
+
+.o_main_navbar .o_menu_sections li a:hover {
+    color: $text_primary !important;
+    background-color: $secondary_light;
+}
+
+.o_main_navbar .o_menu_sections li a.active {
+    color: $text_primary !important;
+    background-color: $primary_color;
+}
+
+.o_main_navbar .o_menu_systray li a {
+    color: $text_secondary !important;
+    transition: color 0.2s ease;
+}
+
+.o_main_navbar .o_menu_systray li a:hover {
+    color: $text_primary !important;
+}
+
+.o_main_navbar .o_user_menu > a {
+    color: $text_secondary !important;
+}
+
+.o_main_navbar .o_user_menu > a:hover {
+    color: $text_primary !important;
+    background-color: $secondary_light;
+}
+
+.o_navbar_apps_menu .dropdown-menu {
+    background-color: $secondary_color;
+    border: 1px solid $secondary_light;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.o_navbar_apps_menu .dropdown-menu .dropdown-item {
+    color: $text_secondary;
+    transition: all 0.2s ease;
+}
+
+.o_navbar_apps_menu .dropdown-menu .dropdown-item:hover {
+    color: $text_primary;
+    background-color: $secondary_light;
+}
