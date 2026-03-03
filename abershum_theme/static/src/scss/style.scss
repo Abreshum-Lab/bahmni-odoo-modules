@@ -1,0 +1,206 @@
+// Abershum Theme - Main Style
+
+// Base styling
+.o_web_client {
+    background-color: $background_light;
+}
+
+// Action area
+.o_action_manager {
+    background-color: $background_light;
+}
+
+.o_action {
+    background-color: $background_light;
+}
+
+// Control panel
+.o_control_panel {
+    background-color: #ffffff;
+    border-bottom: 1px solid $border_color;
+    padding: 12px 16px;
+    margin-bottom: 0;
+}
+
+.o_control_panel .breadcrumb {
+    background-color: transparent;
+    padding: 0;
+    margin: 0;
+}
+
+.o_control_panel .breadcrumb-item a {
+    color: $primary_color;
+}
+
+.o_control_panel .breadcrumb-item.active {
+    color: $secondary_color;
+}
+
+// Buttons
+.btn-primary {
+    background: linear-gradient($primary_color, $primary_dark) !important;
+    border-color: $primary_dark !important;
+    color: #ffffff !important;
+    border-radius: 6px !important;
+    font-weight: 500 !important;
+    transition: all 0.2s ease !important;
+}
+
+.btn-primary:hover {
+    background: $primary_dark !important;
+    border-color: $primary_darker !important;
+}
+
+.btn-secondary {
+    background-color: $secondary_light !important;
+    border-color: $secondary_light !important;
+    color: #ffffff !important;
+    border-radius: 6px !important;
+    font-weight: 500 !important;
+    transition: all 0.2s ease !important;
+}
+
+.btn-secondary:hover {
+    background-color: $secondary_color !important;
+    border-color: $secondary_color !important;
+}
+
+// Form styling
+.o_form_view {
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.o_form_view .o_form_sheet_bg {
+    padding: 16px;
+}
+
+.o_form_view .o_form_sheet {
+    border: 1px solid $border_color;
+    border-radius: 8px;
+    box-shadow: none;
+}
+
+// Input fields
+.o_form_view .o_input {
+    border-radius: 6px !important;
+}
+
+.o_form_view input,
+.o_form_view select,
+.o_form_view textarea {
+    border-radius: 6px !important;
+    border: 1px solid $border_color !important;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+.o_form_view input:focus,
+.o_form_view select:focus,
+.o_form_view textarea:focus {
+    border-color: $primary_color !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12) !important;
+}
+
+// List view
+.o_list_view {
+    background-color: #ffffff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.o_list_view thead th {
+    background-color: $background_light;
+    border-bottom: 2px solid $border_color;
+    font-weight: 600;
+    color: $secondary_color;
+}
+
+.o_list_view tbody tr:hover {
+    background-color: rgba(59, 130, 246, 0.04);
+}
+
+.o_list_view tbody tr.o_data_row_selected {
+    background-color: rgba(59, 130, 246, 0.08);
+}
+
+// Kanban view
+.o_kanban_view {
+    background-color: $background_light;
+    padding: 16px;
+}
+
+.o_kanban_view .o_kanban_record {
+    background-color: #ffffff;
+    border-radius: 8px;
+    border: 1px solid $border_color;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.o_kanban_view .o_kanban_record:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    transform: translateY(-2px);
+}
+
+// Modal styling
+.modal-content {
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+    background-color: $secondary_color;
+    border-radius: 12px 12px 0 0;
+    border-bottom: none;
+    padding: 16px 20px;
+}
+
+.modal-header .modal-title {
+    color: $text_primary;
+    font-weight: 600;
+}
+
+.modal-header .btn-close {
+    filter: invert(1);
+}
+
+.modal-body {
+    padding: 20px;
+}
+
+.modal-footer {
+    border-top: 1px solid $border_color;
+    padding: 16px 20px;
+}
+
+// Chatter
+.o_Chatter {
+    background-color: #ffffff;
+    border-radius: 8px;
+    margin-top: 16px;
+}
+
+.o_Chatter_topbar {
+    background-color: $background_light;
+    border-radius: 8px 8px 0 0;
+    padding: 12px 16px;
+}
+
+// Tags
+.o_tag {
+    border-radius: 4px !important;
+    font-weight: 500 !important;
+}
+
+// Status indicator
+.o_status {
+    border-radius: 50%;
+}
+
+// Loading indicator
+.o_loading {
+    background-color: $primary_color !important;
+}
