@@ -1,0 +1,137 @@
+/* Abershum Login Custom - Modern Login Styling */
+
+/* Vertical Centering for Login Layout */
+.background {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 100vh !important;
+}
+
+.background .container {
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+}
+
+.background .container .container {
+    padding: 1.5rem !important;
+}
+
+/* Modern Card Styling */
+.o_database_list {
+    border-radius: 24px !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12) !important;
+}
+
+/* Styled Brand Logo Text */
+.abreshum-brand-logo {
+    font-family: 'Impact', 'Haettenschweiler', 'Arial Narrow Bold', sans-serif;
+    font-size: 42px;
+    font-weight: 400;
+    letter-spacing: 2px;
+    color: #1f2937;
+    text-transform: uppercase;
+    margin: 0;
+    padding: 10px 0;
+}
+
+.abreshum-brand-logo .brand-accent {
+    color: #3b82f6;
+}
+
+/* Modern Form Inputs */
+.oe_login_form .form-control {
+    border-radius: 8px !important;
+    border: 1.5px solid #d1d5db !important;
+    padding: 12px 16px !important;
+    font-size: 15px !important;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+.oe_login_form .form-control:focus {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12) !important;
+    outline: none !important;
+}
+
+.oe_login_form .form-control::placeholder {
+    color: #9ca3af !important;
+}
+
+/* Modern Labels */
+.oe_login_form .col-form-label {
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 6px;
+}
+
+/* Modern Button Styling */
+.oe_login_form .btn-primary {
+    border-radius: 8px !important;
+    padding: 12px 24px !important;
+    font-weight: 500 !important;
+    font-size: 15px !important;
+    background-color: #3b82f6 !important;
+    border-color: #3b82f6 !important;
+    transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.1s ease !important;
+}
+
+.oe_login_form .btn-primary:hover {
+    background-color: #2563eb !important;
+    border-color: #2563eb !important;
+}
+
+.oe_login_form .btn-primary:active {
+    transform: scale(0.98);
+}
+
+/* Alert Styling */
+.oe_login_form .alert {
+    border-radius: 8px !important;
+    border: none !important;
+}
+
+/* Database Select Input Group */
+.oe_login_form .input-group .form-control {
+    border-radius: 8px 0 0 8px !important;
+}
+
+.oe_login_form .input-group-append .btn {
+    border-radius: 0 8px 8px 0 !important;
+}
+
+/* Password Field with Toggle */
+.password-field-wrapper {
+    position: relative;
+    display: block;
+}
+
+.password-field-wrapper .form-control {
+    padding-right: 48px !important;
+}
+
+.password-toggle-btn {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #9ca3af;
+    padding: 0;
+    font-size: 18px;
+    line-height: 1;
+    z-index: 10;
+}
+
+.password-toggle-btn:hover {
+    color: #6b7280;
+}
+
+.password-toggle-btn:focus {
+    outline: none;
+    color: #3b82f6;
+}
