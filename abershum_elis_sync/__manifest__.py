@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 {
-    'name': 'Abershum ELIS Sync',
+    'name': 'Abershum Lab',
     'version': '1.0',
     'summary': 'Sync lab test orders from Odoo to OpenELIS',
     'sequence': 10,
@@ -12,6 +12,7 @@ It automatically identifies lab test products and sends them to OpenELIS via RES
     """,
     'category': 'Sales',
     'website': '',
+    'icon': 'abershum_elis_sync/static/src/img/abershum-logo.png',
     'images': [],
     'depends': ['base', 'sale', 'bahmni_sale'],
     'external_dependencies': {
@@ -23,6 +24,9 @@ It automatically identifies lab test products and sends them to OpenELIS via RES
         'security/ir.model.access.csv',  # Basic access rules
         'security/ir_model_access_failed_event.xml',  # Failed event access (uses XML to reference group)
         'security/ir_rule_failed_event.xml',  # Then record rules
+        # Seed Data
+        'data/openelis_department_data.xml',
+        'data/openelis_sample_type_data.xml',
         # Data files
         'data/ir_sequence_data.xml',
         'data/ir_cron_data.xml',
@@ -45,7 +49,7 @@ It automatically identifies lab test products and sends them to OpenELIS via RES
     'qweb': [],
     'license': 'LGPL-3',
     'installable': True,
-    'application': False,
+    'application': True,
     'auto_install': False,
     'post_init_hook': 'post_init_hook',
 }

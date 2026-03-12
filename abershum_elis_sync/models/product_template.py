@@ -17,10 +17,10 @@ class ProductTemplate(models.Model):
         string='OpenELIS Department/Section',
         help='The Test Section in OpenELIS this test belongs to'
     )
-    elis_sample_type_ids = fields.Many2many(
+    elis_sample_type_id = fields.Many2one(
         'openelis.sample.type',
-        string='OpenELIS Sample Types',
-        help='Sample types for this test in OpenELIS'
+        string='OpenELIS Sample Type',
+        help='Sample type for this test in OpenELIS'
     )
     elis_result_type = fields.Selection([
         ('numerical', 'Numerical'),
@@ -72,7 +72,7 @@ class ProductTemplate(models.Model):
             vals['uuid'] = str(uuid.uuid4())
             
         product = super(ProductTemplate, self).create(vals)
-        if self._is_lab_test(product):
+        if self._is_lab_test(product) and not self.env.context.get('skip_sync'):
             try:
                 self.env['openelis.sync.service'].sync_lab_test_to_openelis(product)
             except Exception as e:
@@ -91,13 +91,13 @@ class ProductTemplate(models.Model):
         # Check if any relevant fields changed
         relevant_fields = [
             'name', 'default_code', 'description_sale', 'categ_id', 'active', 'list_price',
-            'is_lab_test', 'elis_department_id', 'elis_sample_type_ids', 'elis_result_type', 
+            'is_lab_test', 'elis_department_id', 'elis_sample_type_id', 'elis_result_type', 
             'elis_uom', 'elis_reference_range', 'elis_loinc', 'elis_sort_order',
             'is_panel', 'panel_test_ids', 'uuid'
         ]
         if any(field in vals for field in relevant_fields):
             for product in self:
-                if self._is_lab_test(product):
+                if self._is_lab_test(product) and not self.env.context.get('skip_sync'):
                     try:
                         self.env['openelis.sync.service'].sync_lab_test_to_openelis(product)
                     except Exception as e:

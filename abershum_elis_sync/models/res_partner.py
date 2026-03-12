@@ -4,6 +4,7 @@ import requests
 import uuid
 import json
 from datetime import date, datetime
+from dateutil.relativedelta import relativedelta
 from odoo import models, api, fields, _
 from odoo.exceptions import ValidationError, UserError
 
@@ -83,36 +84,13 @@ class ResPartner(models.Model):
     @api.depends('birthdate')
     def _compute_age(self):
         """Calculate age (years, months, days) from birthdate"""
-        if self.env.context.get('skip_compute_age'):
-            return
-            
-        today = date.today()
+        today = fields.Date.context_today(self)
         for partner in self:
             if partner.birthdate:
-                try:
-                    d1 = partner.birthdate
-                    d2 = today
-                    
-                    years = d2.year - d1.year
-                    months = d2.month - d1.month
-                    days = d2.day - d1.day
-                    
-                    if days < 0:
-                        months -= 1
-                        # Approximate days in previous month
-                        days += 30 
-                    
-                    if months < 0:
-                        years -= 1
-                        months += 12
-                        
-                    partner.age = max(0, years)
-                    partner.birth_months = max(0, months)
-                    partner.birth_days = max(0, days)
-                except Exception:
-                    partner.age = 0
-                    partner.birth_months = 0
-                    partner.birth_days = 0
+                rd = relativedelta(today, partner.birthdate)
+                partner.age = rd.years
+                partner.birth_months = rd.months
+                partner.birth_days = rd.days
             else:
                 partner.age = 0
                 partner.birth_months = 0
@@ -120,53 +98,58 @@ class ResPartner(models.Model):
 
     def _inverse_age(self):
         """Calculate birthdate from age components"""
-        if self.env.context.get('skip_inverse_age'):
-            return
-            
-        from dateutil.relativedelta import relativedelta
-        today = date.today()
+        today = fields.Date.context_today(self)
         for partner in self:
             if any([partner.age, partner.birth_months, partner.birth_days]):
-                try:
-                    # Subtract years, months, and days from today to get approximate birthdate
-                    # Note: Using middle of the month/timeframe for estimation if only partial info provided
-                    # but here we just subtract exactly what is entered.
-                    new_birthdate = today - relativedelta(years=partner.age or 0, 
-                                                         months=partner.birth_months or 0, 
-                                                         days=partner.birth_days or 0)
-                    
-                    if not partner.birthdate or partner.birthdate != new_birthdate:
-                        partner.with_context(skip_compute_age=True).birthdate = new_birthdate
-                except Exception:
-                    pass
+                new_birthdate = today - relativedelta(years=partner.age or 0, 
+                                                     months=partner.birth_months or 0, 
+                                                     days=partner.birth_days or 0)
+                if partner.birthdate != new_birthdate:
+                    partner.birthdate = new_birthdate
+
+    @api.onchange('age', 'birth_months', 'birth_days')
+    def _onchange_age_estimation(self):
+        """Estimate DOB immediately in UI when age fields change"""
+        if any([self.age, self.birth_months, self.birth_days]):
+            today = fields.Date.context_today(self)
+            self.birthdate = today - relativedelta(years=self.age or 0, 
+                                                  months=self.birth_months or 0, 
+                                                  days=self.birth_days or 0)
+
+    @api.onchange('birthdate')
+    def _onchange_birthdate_estimation(self):
+        """Update age components immediately in UI when birthdate changes"""
+        if self.birthdate:
+            today = fields.Date.context_today(self)
+            rd = relativedelta(today, self.birthdate)
+            self.age = rd.years
+            self.birth_months = rd.months
+            self.birth_days = rd.days
 
     @api.constrains('birthdate', 'age', 'birth_months', 'birth_days', 'is_patient', 'is_company')
     def _check_birthdate_or_age(self):
         """Validate that birthdate or age info is provided for patients"""
         for partner in self:
-            if partner.is_patient and not partner.is_company:
-                has_birthdate = bool(partner.birthdate)
-                # Allow age 0 if months or days are provided, or if specifically set to 0
-                # In Odoo, Integer fields are 0 by default. 
-                # We check if at least one of them is non-zero or birthdate is set.
-                has_age_info = any([
-                    partner.age > 0,
-                    partner.birth_months > 0,
-                    partner.birth_days > 0,
-                    # If they explicitly have 0 years, 0 months, 0 days but it's a patient, 
-                    # we might still want to allow it if it was computed from birthdate.
-                    # But if birthdate is ALSO missing, it's invalid.
-                ])
+            # Skip validation for system templates or non-patients
+            if not partner.is_patient or partner.is_company:
+                continue
                 
-                # If birthdate is missing AND all age fields are 0, it might be a legacy record.
-                # To avoid blocking installation, we could log a warning instead of raising if it's a legacy record.
-                if not has_birthdate and not has_age_info:
-                    # Check if this is a new record or weight sync? 
-                    # For now, let's just make it mandatory but let's see if we can "fix" them in post_init
-                    raise ValidationError(
-                        _('For patient %s, either Date of Birth or Age (Years/Months/Days) must be provided. '
-                          'OpenELIS requires this information.') % partner.name
-                    )
+            # Exclude 'Default User Template', 'Public user', 'OdooBot', and other potential template/system records
+            if partner.name and any(sys_name in partner.name for sys_name in ['Bahmni EMR Sync','Administrator', 'Template', 'Default', 'Public', 'Anonymous', 'Bot']):
+                continue
+
+            has_birthdate = bool(partner.birthdate)
+            has_age_info = any([
+                partner.age > 0,
+                partner.birth_months > 0,
+                partner.birth_days > 0,
+            ])
+            
+            if not has_birthdate and not has_age_info:
+                raise ValidationError(
+                    _('For patient %s, either Date of Birth or Age (Years/Months/Days) must be provided. '
+                      'OpenELIS requires this information.') % partner.name
+                )
 
     @api.model
     def create(self, vals):
@@ -235,7 +218,7 @@ class ResPartner(models.Model):
         _logger.info(">>> OpenELIS Sync: Attempting patient sync for %s (ref: %s)", partner.name, partner.ref)
         
         # 1. Verification
-        sync_enabled = self.env['ir.config_parameter'].sudo().get_param('abershum_elis_sync.enable_patient_sync', False)
+        sync_enabled = self.env['ir.config_parameter'].sudo().get_param('abershum_elis_sync.enable_openelis_sync', False)
         if not sync_enabled:
             _logger.debug("OpenELIS Sync: Disabled in settings.")
             return False

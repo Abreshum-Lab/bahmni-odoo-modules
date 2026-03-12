@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="dept_biochemistry" model="openelis.department">
+            <field name="name">Biochemistry Department</field>
+        </record>
+        <record id="dept_haematology" model="openelis.department">
+            <field name="name">Haematology Lab Department</field>
+        </record>
+        <record id="dept_histopathology" model="openelis.department">
+            <field name="name">Histopathology Department</field>
+        </record>
+        <record id="dept_microbiology" model="openelis.department">
+            <field name="name">Microbiology Department</field>
+        </record>
+        <record id="dept_pathology" model="openelis.department">
+            <field name="name">Pathology Department</field>
+        </record>
+        <record id="dept_serology" model="openelis.department">
+            <field name="name">Serology Department</field>
+        </record>
+    </data>
+</odoo>

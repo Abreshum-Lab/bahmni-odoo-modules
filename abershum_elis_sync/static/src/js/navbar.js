@@ -17,8 +17,8 @@ patch(NavBar.prototype, "abershum_elis_sync_navbar", {
             args: [],
             kwargs: {},
         });
-        
-        let openelisUrl = url.openelis_api_url || "http://localhost:8080/openelis";
+
+        let openelisUrl = url.openelis_api_url || "http://localhost/openelis";
         // Strip /rest if present in URL
         openelisUrl = openelisUrl.split('/rest')[0];
         window.open(openelisUrl, '_blank');

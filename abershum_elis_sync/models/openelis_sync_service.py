@@ -13,6 +13,153 @@ class OpenELISSyncService(models.Model):
     _auto = False
 
     @api.model
+    def pull_catalog_from_openelis(self):
+        """
+        Pull the entire lab catalog from OpenELIS and update/create Odoo products.
+        """
+        _logger.info(">>> OpenELIS Sync: Starting Catalog Pull...")
+        
+        api_url = self.env['ir.config_parameter'].sudo().get_param('abershum_elis_sync.openelis_api_url', '')
+        if not api_url:
+            return {'status': 'error', 'message': 'API URL not configured'}
+
+        if not api_url.startswith(('http://', 'https://')):
+            api_url = 'http://' + api_url.lstrip('/')
+            
+        url = api_url.rstrip('/') + '/rest/odoo/catalog'
+        
+        api_username = self.env['ir.config_parameter'].sudo().get_param('abershum_elis_sync.openelis_api_username', '')
+        api_password = self.env['ir.config_parameter'].sudo().get_param('abershum_elis_sync.openelis_api_password', '')
+        auth = (api_username, api_password) if api_username and api_password else None
+
+        try:
+            response = requests.get(url, auth=auth, timeout=30, verify=False)
+            if response.status_code != 200:
+                return {'status': 'error', 'message': f'HTTP {response.status_code}: {response.text[:200]}'}
+            
+            catalog = response.json() # Expected list of dicts
+            
+            stats = {'updated': 0, 'created': 0, 'skipped': 0, 'errors': 0}
+            
+            # Pass 1: Process basic fields for all items
+            _logger.info(">>> Pass 1: Processing %d items", len(catalog))
+            for item in catalog:
+                try:
+                    res = self._process_catalog_item(item)
+                    stats[res] += 1
+                except Exception as e:
+                    _logger.error("Error processing catalog item %s: %s", item.get('name'), str(e))
+                    stats['errors'] += 1
+            
+            # Pass 2: Link panel members
+            _logger.info(">>> Pass 2: Linking panel members")
+            for item in catalog:
+                if item.get('is_panel') and item.get('test_uuids'):
+                    _logger.info("Processing members for panel: %s (UUID: %s)", item.get('name'), item.get('id'))
+                    try:
+                        self._process_panel_members(item)
+                    except Exception as e:
+                        _logger.error("Error processing panel members for %s: %s", item.get('name'), str(e))
+            
+            msg = f"Sync Complete: {stats['updated']} updated, {stats['created']} created, {stats['skipped']} skipped, {stats['errors']} errors."
+            _logger.info(">>> OpenELIS Sync: %s", msg)
+            return {'status': 'success', 'message': msg}
+            
+        except Exception as e:
+            _logger.error(">>> OpenELIS Sync: Catalog Pull Failed - %s", str(e))
+            return {'status': 'error', 'message': str(e)}
+
+    def _process_catalog_item(self, item):
+        """Process a single catalog item from OpenELIS"""
+        uuid = item.get('id') or item.get('uuid')
+        name = item.get('name')
+        if not uuid or not name:
+            return 'skipped'
+
+        Product = self.env['product.template']
+        
+        # 1. Match by UUID
+        product = Product.search([('uuid', '=', uuid)], limit=1)
+        
+        # 2. Match by Name if no UUID match
+        if not product:
+            product = Product.search([('name', '=', name)], limit=1)
+            if product:
+                # Link existing product to this UUID
+                product.write({'uuid': uuid})
+        
+        # Prepare values
+        vals = {
+            'name': name,
+            'uuid': uuid,
+            'is_lab_test': True,
+            'detailed_type': 'service',
+            'list_price': item.get('list_price', 0.0),
+            'default_code': item.get('code', ''),
+            'elis_result_type': item.get('elis_result_type', 'text'),
+            'elis_uom': item.get('elis_uom', ''),
+            'elis_reference_range': item.get('elis_reference_range', ''),
+            'elis_loinc': item.get('elis_loinc', ''),
+            'elis_sort_order': item.get('elis_sort_order', 0),
+            'is_panel': item.get('is_panel', False),
+        }
+
+        # Department Mapping
+        dept_name = item.get('elis_department')
+        if dept_name:
+            dept = self.env['openelis.department'].search([('name', '=', dept_name)], limit=1)
+            if not dept:
+                dept = self.env['openelis.department'].create({'name': dept_name})
+            vals['elis_department_id'] = dept.id
+
+        # Sample Type Mapping
+        sample_names = item.get('elis_sample_types', [])
+        if sample_names:
+            sname = sample_names[0] if isinstance(sample_names, list) and sample_names else sample_names
+            if sname:
+                sample = self.env['openelis.sample.type'].search([('name', '=', sname)], limit=1)
+                if not sample:
+                    sample = self.env['openelis.sample.type'].create({'name': sname})
+                vals['elis_sample_type_id'] = sample.id
+
+        if product:
+            product.with_context(skip_sync=True).write(vals)
+            return 'updated'
+        else:
+            Product.with_context(skip_sync=True).create(vals)
+            return 'created'
+
+    def _process_panel_members(self, item):
+        """Link panel members to the panel product"""
+        uuid = item.get('id') or item.get('uuid')
+        test_uuids = item.get('test_uuids', [])
+        if not uuid or not test_uuids:
+            return
+
+        Product = self.env['product.template']
+        panel = Product.search([('uuid', '=', uuid)], limit=1)
+        if not panel:
+            return
+
+        member_ids = []
+        for tuuid in test_uuids:
+            _logger.debug("Searching member with UUID: %s", tuuid)
+            member = Product.search([('uuid', '=', tuuid)], limit=1)
+            if member:
+                _logger.debug("Found member: %s (ID: %d)", member.name, member.id)
+                member_ids.append(member.id)
+            else:
+                _logger.warning("Member UUID %s not found in Odoo", tuuid)
+        
+        if member_ids:
+            _logger.info("Linking %d members to panel %s", len(member_ids), panel.name)
+            panel.with_context(skip_sync=True).write({
+                'panel_test_ids': [(6, 0, member_ids)]
+            })
+        else:
+            _logger.warning("No members found for panel %s", panel.name)
+
+    @api.model
     def sync_lab_test_to_openelis(self, product):
         """
         Sync lab test (product) from Odoo to OpenELIS.
@@ -56,8 +203,8 @@ class OpenELISSyncService(models.Model):
                 'all_active': product.active, # Legacy support
                 'list_price': product.list_price,
                 # New OpenELIS fields
-                'elis_department': product.elis_department or '',
-                'elis_sample_type': product.elis_sample_type or '',
+                'elis_department': product.elis_department_id.name or '',
+                'elis_sample_type': product.elis_sample_type_id.name or '',
                 'elis_result_type': product.elis_result_type or '',
                 'elis_uom': product.elis_uom or '',
                 'elis_reference_range': product.elis_reference_range or '',
