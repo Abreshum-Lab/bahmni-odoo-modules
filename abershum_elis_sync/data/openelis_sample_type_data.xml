@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="sample_blood" model="openelis.sample.type">
+            <field name="name">Blood Specimen</field>
+        </record>
+        <record id="sample_urine" model="openelis.sample.type">
+            <field name="name">Urine</field>
+        </record>
+        <record id="sample_serum" model="openelis.sample.type">
+            <field name="name">Serum</field>
+        </record>
+        <record id="sample_sputum" model="openelis.sample.type">
+            <field name="name">Sputum</field>
+        </record>
+        <record id="sample_plasma" model="openelis.sample.type">
+            <field name="name">Plasma</field>
+        </record>
+        <record id="sample_semen" model="openelis.sample.type">
+            <field name="name">Semen</field>
+        </record>
+        <record id="sample_csf" model="openelis.sample.type">
+            <field name="name">Cerebrospinal fluid</field>
+        </record>
+        <record id="sample_feces" model="openelis.sample.type">
+            <field name="name">Feces</field>
+        </record>
+        <record id="sample_saliva" model="openelis.sample.type">
+            <field name="name">Saliva</field>
+        </record>
+        <record id="sample_pus" model="openelis.sample.type">
+            <field name="name">Pus specimen</field>
+        </record>
+        <record id="sample_body_fluid" model="openelis.sample.type">
+            <field name="name">Body fluid specimen</field>
+        </record>
+        <record id="sample_amniotic_fluid" model="openelis.sample.type">
+            <field name="name">Amniotic fluid specimen</field>
+        </record>
+        <record id="sample_urethral_fluid" model="openelis.sample.type">
+            <field name="name">Urethral fluid</field>
+        </record>
+        <record id="sample_vaginal_fluid" model="openelis.sample.type">
+            <field name="name">Vaginal fluid</field>
+        </record>
+        <record id="sample_tissue" model="openelis.sample.type">
+            <field name="name">Tissue Specimen</field>
+        </record>
+        <record id="sample_nasopharyngeal_swab" model="openelis.sample.type">
+            <field name="name">Nasopharyngeal Swab</field>
+        </record>
+        <record id="sample_cervical_swab" model="openelis.sample.type">
+            <field name="name">Cervical Swab</field>
+        </record>
+        <record id="sample_skin" model="openelis.sample.type">
+            <field name="name">Skin Specimen</field>
+        </record>
+        <record id="sample_other" model="openelis.sample.type">
+            <field name="name">Other Specimen</field>
+        </record>
+    </data>
+</odoo>

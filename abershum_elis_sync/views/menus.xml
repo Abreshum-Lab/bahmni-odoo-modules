@@ -1,18 +1,57 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Menu item under Bahmni app - reuses bahmni_sale settings action -->
+    <!-- Root Menu -->
     <menuitem
-        id="menu_abershum_elis_settings"
+        id="menu_abershum_lab_root"
+        name="Abershum Lab"
+        sequence="10"/>
+
+    <!-- Settings Menu -->
+    <menuitem
+        id="menu_abershum_elis_settings_group"
+        name="Configuration"
+        parent="menu_abershum_lab_root"
+        sequence="100"/>
+
+    <menuitem
+        id="menu_elis_settings_action"
         name="Settings"
-        parent="bahmni_sale.bahmni_menu_root"
-        action="bahmni_sale.res_config_settings_action"
-        sequence="99"/>
+        parent="menu_abershum_elis_settings_group"
+        action="abershum_elis_sync_config_settings_action"
+        sequence="10"/>
     
-    <!-- Failed Sync Events menu -->
+    <!-- Master Data Menus -->
+    <menuitem
+        id="menu_openelis_master_data"
+        name="Master Data"
+        parent="menu_abershum_lab_root"
+        sequence="20"/>
+
+    <menuitem
+        id="menu_openelis_department"
+        name="Departments"
+        parent="menu_openelis_master_data"
+        action="openelis_department_action"
+        sequence="10"/>
+
+    <menuitem
+        id="menu_openelis_sample_type"
+        name="Sample Types"
+        parent="menu_openelis_master_data"
+        action="openelis_sample_type_action"
+        sequence="20"/>
+
+    <!-- Operations/Events -->
+    <menuitem
+        id="menu_openelis_operations"
+        name="Operations"
+        parent="menu_abershum_lab_root"
+        sequence="30"/>
+
     <menuitem
         id="menu_openelis_failed_events"
         name="Failed Sync Events"
-        parent="bahmni_sale.bahmni_menu_root"
+        parent="menu_openelis_operations"
         action="action_openelis_failed_event"
-        sequence="100"/>
+        sequence="10"/>
 </odoo>
