@@ -1,0 +1,144 @@
+// Abershum Theme - Sidebar Styling
+
+#sidebar_panel {
+    height: calc(100% - 0%);
+    position: fixed;
+    top: 0px;
+    background-color: $primary_color;
+    display: none;
+    width: 220px;
+    overflow-y: scroll;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    z-index: 999;
+    border-right: 1px solid $primary_dark;
+}
+
+#sidebar_panel::-webkit-scrollbar {
+    display: none;
+}
+
+.sidebar_panel .sidebar {
+    padding: 0;
+    white-space: nowrap;
+    padding-bottom: 20px;
+    padding-top: 5px;
+}
+
+.sidebar_panel .sidebar .sidebar_logo {
+    padding-top: 24px;
+    text-align: center;
+    padding-bottom: 24px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.sidebar_panel .sidebar .sidebar_logo img {
+    max-width: 140px;
+}
+
+.sidebar_panel .sidebar .sidebar_head {
+    padding-top: 20px;
+    padding-left: 20px;
+    color: $text_secondary;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+}
+
+.sidebar_panel .sidebar .sidebar_menu {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.sidebar_panel .sidebar .sidebar_menu li {
+    margin: 0;
+    padding: 0;
+    border: 0px;
+    display: block;
+}
+
+.sidebar_panel .sidebar .sidebar_menu li a {
+    margin: 0;
+    border: 0px;
+    display: block;
+    cursor: pointer;
+    overflow: hidden;
+    padding: 10px 12px 10px 20px;
+    color: $text_secondary;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    border-left: 3px solid transparent;
+}
+
+.sidebar_panel .sidebar .sidebar_menu li:hover a {
+    background: rgba(255, 255, 255, 0.15);
+    color: $text_primary;
+    border-left-color: $text_primary;
+}
+
+.sidebar_panel .nav-link {
+    opacity: .7;
+    transition: all 0.2s ease;
+}
+
+.sidebar_panel .sidebar a.nav-link.active {
+    color: $text_primary !important;
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.15);
+    border-left-color: $text_primary;
+}
+
+.sidebar_panel .sidebar .sidebar_menu li a .sidebar_img {
+    width: 18px;
+    margin-right: 10px;
+    opacity: 0.8;
+}
+
+.sidebar_panel .sidebar .sidebar_menu li:hover a .sidebar_img {
+    opacity: 1;
+}
+
+.navbar-toggler span {
+    display: block;
+    background-color: $text_primary;
+    height: 2px;
+    width: 20px;
+    margin-top: 4px;
+    border-radius: 2px;
+    margin-bottom: 5px;
+    position: relative;
+    left: 0;
+    opacity: 1;
+    transition: all 0.35s ease-out;
+    transform-origin: center left;
+}
+
+.navbar-toggler span:nth-child(1) {
+    margin-top: 0.3em;
+}
+
+.navbar-toggler:not(.collapsed) span:nth-child(1) {
+    transform: translate(15%, -33%) rotate(45deg);
+}
+
+.navbar-toggler:not(.collapsed) span:nth-child(2) {
+    opacity: 0;
+}
+
+.navbar-toggler:not(.collapsed) span:nth-child(3) {
+    transform: translate(15%, 33%) rotate(-45deg);
+}
+
+.navbar-toggler span:nth-child(1) {
+    transform: translate(0%, 0%) rotate(0deg);
+}
+
+.navbar-toggler span:nth-child(2) {
+    opacity: 1;
+}
+
+.navbar-toggler span:nth-child(3) {
+    transform: translate(0%, 0%) rotate(0deg);
+}

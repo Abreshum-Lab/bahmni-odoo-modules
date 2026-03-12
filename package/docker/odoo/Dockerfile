@@ -23,8 +23,9 @@ COPY openerp7_data_import ${ADDON_PATH}/openerp7_data_import/
 COPY odoo10_data_import ${ADDON_PATH}/odoo10_data_import/
 COPY bahmni_reports ${ADDON_PATH}/bahmni_reports
 COPY bahmni_customer_return ${ADDON_PATH}/bahmni_customer_return
-COPY abershum_elis_sync ${ADDON_PATH}/abershum-elis-sync/
 COPY community_modules ${ADDON_PATH}/community_modules/
+COPY abershum_login_custom ${ADDON_PATH}/abershum_login_custom/
+COPY abershum_theme ${ADDON_PATH}/abershum_theme/
 COPY package/resources/data/address.seed.csv ${ADDON_PATH}/bahmni_initializer/data/
 COPY package/resources/data/uom_seed.xml ${ADDON_PATH}/bahmni_initializer/data/
 COPY package/resources/data/order_type.xml ${ADDON_PATH}/bahmni_initializer/data/
@@ -34,4 +35,4 @@ RUN pip3 install python-decouple requests
 # Keep as root for entrypoint to fix permissions, entrypoint will switch to odoo user
 ENTRYPOINT ["/usr/local/bin/entrypoint-custom.sh"]
 # Note: USER odoo is removed - our custom entrypoint handles user switching after fixing permissions
-CMD ["odoo", "-u", "all", "-i", "sale_management,purchase,stock,point_of_sale,l10n_generic_coa,bahmni_account,bahmni_product,bahmni_api_feed,bahmni_stock,bahmni_purchase,bahmni_address_mapping,bahmni_sale,restful_api,bahmni_reports,bahmni_auto_payment_reconciliation,abershum-elis-sync", "--without-demo", "-d odoo"]
+CMD ["odoo", "-u", "all", "-i", "sale_management,purchase,stock,point_of_sale,l10n_generic_coa,bahmni_account,bahmni_product,bahmni_api_feed,bahmni_stock,bahmni_purchase,bahmni_address_mapping,bahmni_sale,restful_api,bahmni_reports,bahmni_auto_payment_reconciliation,abershum-elis-sync,abershum_login_custom,abershum_theme", "--without-demo", "-d odoo"]
