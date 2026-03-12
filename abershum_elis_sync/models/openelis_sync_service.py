@@ -13,6 +13,153 @@ class OpenELISSyncService(models.Model):
     _auto = False
 
     @api.model
+    def pull_catalog_from_openelis(self):
+        """
+        Pull the entire lab catalog from OpenELIS and update/create Odoo products.
+        """
+        _logger.info(">>> OpenELIS Sync: Starting Catalog Pull...")
+        
+        api_url = self.env['ir.config_parameter'].sudo().get_param('abershum_elis_sync.openelis_api_url', '')
+        if not api_url:
+            return {'status': 'error', 'message': 'API URL not configured'}
+
+        if not api_url.startswith(('http://', 'https://')):
+            api_url = 'http://' + api_url.lstrip('/')
+            
+        url = api_url.rstrip('/') + '/rest/odoo/catalog'
+        
+        api_username = self.env['ir.config_parameter'].sudo().get_param('abershum_elis_sync.openelis_api_username', '')
+        api_password = self.env['ir.config_parameter'].sudo().get_param('abershum_elis_sync.openelis_api_password', '')
+        auth = (api_username, api_password) if api_username and api_password else None
+
+        try:
+            response = requests.get(url, auth=auth, timeout=30, verify=False)
+            if response.status_code != 200:
+                return {'status': 'error', 'message': f'HTTP {response.status_code}: {response.text[:200]}'}
+            
+            catalog = response.json() # Expected list of dicts
+            
+            stats = {'updated': 0, 'created': 0, 'skipped': 0, 'errors': 0}
+            
+            # Pass 1: Process basic fields for all items
+            _logger.info(">>> Pass 1: Processing %d items", len(catalog))
+            for item in catalog:
+                try:
+                    res = self._process_catalog_item(item)
+                    stats[res] += 1
+                except Exception as e:
+                    _logger.error("Error processing catalog item %s: %s", item.get('name'), str(e))
+                    stats['errors'] += 1
+            
+            # Pass 2: Link panel members
+            _logger.info(">>> Pass 2: Linking panel members")
+            for item in catalog:
+                if item.get('is_panel') and item.get('test_uuids'):
+                    _logger.info("Processing members for panel: %s (UUID: %s)", item.get('name'), item.get('id'))
+                    try:
+                        self._process_panel_members(item)
+                    except Exception as e:
+                        _logger.error("Error processing panel members for %s: %s", item.get('name'), str(e))
+            
+            msg = f"Sync Complete: {stats['updated']} updated, {stats['created']} created, {stats['skipped']} skipped, {stats['errors']} errors."
+            _logger.info(">>> OpenELIS Sync: %s", msg)
+            return {'status': 'success', 'message': msg}
+            
+        except Exception as e:
+            _logger.error(">>> OpenELIS Sync: Catalog Pull Failed - %s", str(e))
+            return {'status': 'error', 'message': str(e)}
+
+    def _process_catalog_item(self, item):
+        """Process a single catalog item from OpenELIS"""
+        uuid = item.get('id') or item.get('uuid')
+        name = item.get('name')
+        if not uuid or not name:
+            return 'skipped'
+
+        Product = self.env['product.template']
+        
+        # 1. Match by UUID
+        product = Product.search([('uuid', '=', uuid)], limit=1)
+        
+        # 2. Match by Name if no UUID match
+        if not product:
+            product = Product.search([('name', '=', name)], limit=1)
+            if product:
+                # Link existing product to this UUID
+                product.write({'uuid': uuid})
+        
+        # Prepare values
+        vals = {
+            'name': name,
+            'uuid': uuid,
+            'is_lab_test': True,
+            'detailed_type': 'service',
+            'list_price': item.get('list_price', 0.0),
+            'default_code': item.get('code', ''),
+            'elis_result_type': item.get('elis_result_type', 'text'),
+            'elis_uom': item.get('elis_uom', ''),
+            'elis_reference_range': item.get('elis_reference_range', ''),
+            'elis_loinc': item.get('elis_loinc', ''),
+            'elis_sort_order': item.get('elis_sort_order', 0),
+            'is_panel': item.get('is_panel', False),
+        }
+
+        # Department Mapping
+        dept_name = item.get('elis_department')
+        if dept_name:
+            dept = self.env['openelis.department'].search([('name', '=', dept_name)], limit=1)
+            if not dept:
+                dept = self.env['openelis.department'].create({'name': dept_name})
+            vals['elis_department_id'] = dept.id
+
+        # Sample Type Mapping
+        sample_names = item.get('elis_sample_types', [])
+        if sample_names:
+            sname = sample_names[0] if isinstance(sample_names, list) and sample_names else sample_names
+            if sname:
+                sample = self.env['openelis.sample.type'].search([('name', '=', sname)], limit=1)
+                if not sample:
+                    sample = self.env['openelis.sample.type'].create({'name': sname})
+                vals['elis_sample_type_id'] = sample.id
+
+        if product:
+            product.with_context(skip_sync=True).write(vals)
+            return 'updated'
+        else:
+            Product.with_context(skip_sync=True).create(vals)
+            return 'created'
+
+    def _process_panel_members(self, item):
+        """Link panel members to the panel product"""
+        uuid = item.get('id') or item.get('uuid')
+        test_uuids = item.get('test_uuids', [])
+        if not uuid or not test_uuids:
+            return
+
+        Product = self.env['product.template']
+        panel = Product.search([('uuid', '=', uuid)], limit=1)
+        if not panel:
+            return
+
+        member_ids = []
+        for tuuid in test_uuids:
+            _logger.debug("Searching member with UUID: %s", tuuid)
+            member = Product.search([('uuid', '=', tuuid)], limit=1)
+            if member:
+                _logger.debug("Found member: %s (ID: %d)", member.name, member.id)
+                member_ids.append(member.id)
+            else:
+                _logger.warning("Member UUID %s not found in Odoo", tuuid)
+        
+        if member_ids:
+            _logger.info("Linking %d members to panel %s", len(member_ids), panel.name)
+            panel.with_context(skip_sync=True).write({
+                'panel_test_ids': [(6, 0, member_ids)]
+            })
+        else:
+            _logger.warning("No members found for panel %s", panel.name)
+
+    @api.model
     def sync_lab_test_to_openelis(self, product):
         """
         Sync lab test (product) from Odoo to OpenELIS.
@@ -28,24 +175,50 @@ class OpenELISSyncService(models.Model):
             _logger.debug("OpenELIS sync is disabled, skipping sync for product: %s", product.name)
             return {'status': 'skipped', 'message': 'OpenELIS sync is disabled'}
 
-        # Check if product is a lab test
-        lab_test_category_ids = self._get_lab_test_category_ids()
-        if product.categ_id.id not in lab_test_category_ids:
-            _logger.debug("Product %s is not in a lab test category, skipping sync", product.name)
-            return {'status': 'skipped', 'message': 'Product is not a lab test'}
+        # Check if product is a lab test or panel
+        if not product.is_lab_test and not product.is_panel:
+            _logger.debug("Product %s is not a lab test or panel, skipping sync", product.name)
+            return {'status': 'skipped', 'message': 'Product is not a lab test or panel'}
 
         try:
+            # Get component UUIDs for panels
+            test_uuids = []
+            if product.is_panel:
+                test_uuids = [p.uuid for p in product.panel_test_ids if hasattr(p, 'uuid') and p.uuid]
+                # Fallback to searching if UUID field name is different or missing
+                if not test_uuids:
+                    # In some Bahmni setups, UUID might be in a Different field or 
+                    # we might need to use other identifiers. We'll use product.uuid as fallback 
+                    # but OpenELIS expects UUIDs for linking.
+                    test_uuids = [p.uuid for p in product.panel_test_ids if p.uuid]
+
             # Build payload
             payload = {
-                'id': product.id,
+                'id': product.uuid,
                 'name': product.name,
                 'code': product.default_code or '',
                 'description': product.description_sale or '',
                 'category': product.categ_id.name,
                 'active': product.active,
-                'list_price': product.list_price
+                'all_active': product.active, # Legacy support
+                'list_price': product.list_price,
+                # New OpenELIS fields
+                'elis_department': product.elis_department_id.name or '',
+                'elis_sample_type': product.elis_sample_type_id.name or '',
+                'elis_result_type': product.elis_result_type or '',
+                'elis_uom': product.elis_uom or '',
+                'elis_reference_range': product.elis_reference_range or '',
+                'elis_loinc': product.elis_loinc or '',
+                'elis_sort_order': product.elis_sort_order or 0,
+                # Panel fields
+                'is_panel': product.is_panel,
+                'test_uuids': test_uuids
             }
             
+            # Use UUID if available, otherwise fallback to ID (but OpenELIS prefers UUID)
+            product_id = product.uuid if product.uuid else str(product.id)
+            payload['id'] = product_id
+
             # Call OpenELIS API
             response = self._call_openelis_api(payload, endpoint='/rest/odoo/test', event_type='lab_test')
             
@@ -62,6 +235,49 @@ class OpenELISSyncService(models.Model):
             return {'status': 'error', 'message': str(e)}
 
     @api.model
+    def sync_test_order_to_openelis(self, sale_order):
+        """
+        Sync test order (sale order with lab tests) from Odoo to OpenELIS.
+        
+        :param sale_order: sale.order record
+        :return: dict with status and message
+        """
+        if not self._is_sync_enabled():
+            _logger.debug("OpenELIS sync is disabled, skipping test order sync")
+            return {'status': 'skipped', 'message': 'OpenELIS sync is disabled'}
+
+        # Check if order has a patient
+        if not sale_order.partner_id:
+            _logger.warning("Sale order %s has no customer/patient, skipping sync", sale_order.name)
+            return {'status': 'skipped', 'message': 'No customer/patient'}
+
+        try:
+            # Filter order lines that are lab tests or panels
+            lab_test_lines = self._get_lab_test_order_lines(sale_order)
+
+            if not lab_test_lines:
+                _logger.debug("Sale order %s has no lab test products, skipping sync", sale_order.name)
+                return {'status': 'skipped', 'message': 'No lab test products in order'}
+
+            # Build payload
+            payload = self._build_payload(sale_order, lab_test_lines)
+
+            # Call OpenELIS API
+            response = self._call_openelis_api(payload, endpoint='/rest/odoo/test-order', event_type='test_order')
+
+            if response.get('status') == 'success':
+                _logger.info("Successfully synced test order %s to OpenELIS", sale_order.name)
+                return {'status': 'success', 'message': response.get('message', 'Synced successfully')}
+            else:
+                _logger.error("Failed to sync test order %s to OpenELIS: %s", 
+                             sale_order.name, response.get('message', 'Unknown error'))
+                return {'status': 'error', 'message': response.get('message', 'Unknown error')}
+
+        except Exception as e:
+            _logger.error("Error syncing test order %s to OpenELIS: %s", sale_order.name, str(e), exc_info=True)
+            return {'status': 'error', 'message': str(e)}
+
+    @api.model
     def _is_sync_enabled(self):
         """Check if OpenELIS sync is enabled in configuration"""
         return bool(self.env['ir.config_parameter'].sudo().get_param('abershum_elis_sync.enable_openelis_sync', False))
@@ -73,16 +289,14 @@ class OpenELISSyncService(models.Model):
         Lab test products are identified by category: Services/Lab/Test or Services/Lab/Panel
         """
         lab_test_lines = []
-        lab_test_category_ids = self._get_lab_test_category_ids()
         
         for line in sale_order.order_line:
             if line.display_type in ('line_section', 'line_note'):
                 continue
             
-            # Check if product category is Lab/Test or Lab/Panel
-            if line.product_id and line.product_id.categ_id:
-                if line.product_id.categ_id.id in lab_test_category_ids:
-                    lab_test_lines.append(line)
+            # Use the new is_lab_test flag
+            if line.product_id and line.product_id.is_lab_test:
+                lab_test_lines.append(line)
         
         return lab_test_lines
 
@@ -135,18 +349,29 @@ class OpenELISSyncService(models.Model):
             'phone': patient.phone or '',
             'email': patient.email or '',
             'birthdate': birthdate_str,
-            'gender': patient.gender or ''
+            'gender': patient.gender or '',
+            'primary_relative': patient.primary_relative or '',
+            'occupation': patient.occupation or '',
+            'age': patient.age if patient.age else 0,
+            'address': {
+                'street': (patient.street or '')[:30],
+                'city': (patient.city or '')[:30],
+                'state': patient.state_id.code or '',
+                'zip': (patient.zip or '')[:10],
+                'country': (patient.country_id.name or '')[:20]
+            }
         }
         
         # Build order lines
         order_lines = []
         for line in lab_test_lines:
             product = line.product_id
-            product_type = 'Panel' if product.categ_id.name == 'Panel' else 'Test'
+            template = product.product_tmpl_id
+            product_type = 'Panel' if template.categ_id.name == 'Panel' or template.is_panel else 'Test'
             
             order_line = {
-                'product_uuid': product.uuid or '',
-                'product_name': product.name or '',
+                'product_uuid': template.uuid or '',
+                'product_name': template.name or '',
                 'product_type': product_type,
                 'quantity': line.product_uom_qty or 1.0,
                 'comment': line.name or ''
@@ -178,33 +403,9 @@ class OpenELISSyncService(models.Model):
             _logger.warning("OpenELIS API URL is not configured. Cannot sync %s", event_type)
             return {'status': 'error', 'message': 'API URL not configured'}
 
-        # Normalize API URL
+        # Ensure URL starts with schema
         if not api_url.startswith(('http://', 'https://')):
             api_url = 'http://' + api_url.lstrip('/')
-        
-        # Docker internal communication normalization
-        import socket
-        try:
-            # Try to resolve 'openelis' hostname - if it works, we're in Docker network
-            socket.gethostbyname('openelis')
-            is_docker = True
-            _logger.info("Detected Docker network - 'openelis' hostname is resolvable")
-        except socket.gaierror:
-            _logger.info("Not in Docker network or 'openelis' hostname not resolvable")
-        
-        # If URL contains localhost and we're in Docker, replace with service name
-        if is_docker and 'localhost' in api_url.lower():
-            # Replace localhost with openelis service name
-            if 'https://localhost' in api_url.lower():
-                api_url = api_url.replace('https://localhost', 'http://openelis:8052')
-                _logger.info("Replaced localhost with Docker service name: '%s'", api_url)
-            elif 'http://localhost' in api_url.lower():
-                api_url = api_url.replace('http://localhost', 'http://openelis:8052')
-                _logger.info("Replaced localhost with Docker service name: '%s'", api_url)
-            # Also handle localhost with port
-            import re
-            api_url = re.sub(r'localhost(:\d+)?', 'openelis:8052', api_url, flags=re.IGNORECASE)
-            _logger.info("Final normalized URL: '%s'", api_url)
         
         # Prepare request URL
         base_url = api_url.rstrip('/')
@@ -217,6 +418,7 @@ class OpenELISSyncService(models.Model):
         _logger.info("Authentication: %s", "Basic Auth (username: %s)" % api_username if (api_username and api_password) else "None")
         _logger.info("Timeout: 30 seconds")
         _logger.info("SSL Verification: Disabled")
+        _logger.info("JSON Body: %s", json.dumps(payload, indent=2))
         _logger.info("Payload Summary:")
         if event_type == 'test_order':
             _logger.info("  Sale Order ID: %s", payload.get('sale_order_id', 'N/A'))
@@ -284,13 +486,21 @@ class OpenELISSyncService(models.Model):
                 # Store failed event - need to get sale_order from context or payload
                 sale_order_id = self.env.context.get('sale_order_id')
                 if not sale_order_id and 'sale_order_id' in payload:
-                    sale_order_id = self.env['sale.order'].browse(payload['sale_order_id'])
-                elif not sale_order_id:
+                    # payload['sale_order_id'] is a string, convert to int
+                    try:
+                        sale_order_id = int(payload['sale_order_id'])
+                    except (ValueError, TypeError):
+                        sale_order_id = None
+                
+                if not sale_order_id:
                     # Try to find by name
                     sale_order_name = payload.get('sale_order_name')
                     if sale_order_name:
-                        sale_order_id = self.env['sale.order'].search([('name', '=', sale_order_name)], limit=1)
+                        sale_order_rec = self.env['sale.order'].search([('name', '=', sale_order_name)], limit=1)
+                        if sale_order_rec:
+                            sale_order_id = sale_order_rec.id
                 
+                _logger.info("Creating failed event for sale_order_id: %s", sale_order_id)
                 self.env['openelis.failed.event'].create_or_update_failed_event(
                     event_type=event_type,
                     payload_dict=payload,

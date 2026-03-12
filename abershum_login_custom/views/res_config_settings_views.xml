@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Settings View for Abershum Login Customization -->
+    <record id="res_config_settings_view_form" model="ir.ui.view">
+        <field name="name">Abershum Login Custom Settings</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[hasclass('settings')]" position="inside">
+                <div class="app_settings_block" data-string="Login Customization" string="Login Customization" data-key="abershum_login_custom">
+                    <h2>Login Page Customization</h2>
+                    <div class="row mt16 o_settings_container">
+                        <div class="col-12 col-lg-6 o_settings_box">
+                            <div class="o_setting_left_pane"/>
+                            <div class="o_setting_right_pane">
+                                <span class="o_form_label">Login Card Position</span>
+                                <div class="text-muted">
+                                    Choose where the login card appears on the page
+                                </div>
+                                <div class="content-group mt16">
+                                    <field name="orientation" widget="radio"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt16 o_settings_container" attrs="{'invisible': [('orientation', '=', 'default')]}">
+                        <div class="col-12 col-lg-6 o_settings_box">
+                            <div class="o_setting_left_pane"/>
+                            <div class="o_setting_right_pane">
+                                <span class="o_form_label">Login Card Width</span>
+                                <div class="text-muted">
+                                    Width of the login card in pixels (default: 300)
+                                </div>
+                                <div class="content-group mt16">
+                                    <field name="card_width" placeholder="300"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt16 o_settings_container">
+                        <div class="col-12 col-lg-6 o_settings_box">
+                            <div class="o_setting_left_pane"/>
+                            <div class="o_setting_right_pane">
+                                <span class="o_form_label">Background Type</span>
+                                <div class="text-muted">
+                                    Select the type of background for the login page
+                                </div>
+                                <div class="content-group mt16">
+                                    <field name="background" widget="radio"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt16 o_settings_container" attrs="{'invisible': [('background', '!=', 'color')]}">
+                        <div class="col-12 col-lg-6 o_settings_box">
+                            <div class="o_setting_left_pane"/>
+                            <div class="o_setting_right_pane">
+                                <span class="o_form_label">Background Color</span>
+                                <div class="text-muted">
+                                    Enter a hex color code (e.g., #875A7B)
+                                </div>
+                                <div class="content-group mt16">
+                                    <field name="color" placeholder="#875A7B"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt16 o_settings_container" attrs="{'invisible': [('background', '!=', 'image')]}">
+                        <div class="col-12 col-lg-6 o_settings_box">
+                            <div class="o_setting_left_pane"/>
+                            <div class="o_setting_right_pane">
+                                <span class="o_form_label">Background Image</span>
+                                <div class="text-muted">
+                                    Upload an image to use as background
+                                </div>
+                                <div class="content-group mt16">
+                                    <field name="image" widget="image" class="oe_avatar"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt16 o_settings_container" attrs="{'invisible': [('background', '!=', 'url')]}">
+                        <div class="col-12 col-lg-6 o_settings_box">
+                            <div class="o_setting_left_pane"/>
+                            <div class="o_setting_right_pane">
+                                <span class="o_form_label">Background Image URL</span>
+                                <div class="text-muted">
+                                    Enter the URL of an external image
+                                </div>
+                                <div class="content-group mt16">
+                                    <field name="url" placeholder="https://example.com/image.jpg"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </xpath>
+        </field>
+    </record>
+</odoo>

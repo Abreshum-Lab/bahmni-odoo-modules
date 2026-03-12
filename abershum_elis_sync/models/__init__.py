@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from . import openelis_department
+from . import openelis_sample_type
 from . import openelis_sync_service
 from . import sale_order
 from . import res_config_settings

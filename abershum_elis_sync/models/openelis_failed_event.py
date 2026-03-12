@@ -111,6 +111,13 @@ class OpenELISFailedEvent(models.Model):
     ], string='Status', default='pending', index=True)
     
     # Metadata
+    name = fields.Char(
+        string='Name',
+        compute='_compute_display_name',
+        store=True,
+        index=True
+    )
+    
     display_name = fields.Char(
         string='Display Name',
         compute='_compute_display_name',
@@ -125,8 +132,17 @@ class OpenELISFailedEvent(models.Model):
         for record in self:
             if record.event_type == 'patient':
                 name = f"Patient Sync - {record.partner_ref or 'N/A'}"
+            elif record.event_type == 'lab_test':
+                # Extract product name from payload if available
+                try:
+                    payload = json.loads(record.payload) if record.payload else {}
+                    product_name = payload.get('name', 'N/A')
+                    name = f"Lab Test - {product_name}"
+                except:
+                    name = "Lab Test - N/A"
             else:
                 name = f"Test Order - {record.sale_order_id.name if record.sale_order_id else 'N/A'}"
+            record.name = name
             record.display_name = f"{name} [{record.state}]"
     
     def _get_payload_dict(self):
@@ -168,7 +184,9 @@ class OpenELISFailedEvent(models.Model):
                 domain.append(('partner_id', '=', partner_id.id))
         elif event_type == 'test_order':
             if sale_order_id:
-                domain.append(('sale_order_id', '=', sale_order_id.id))
+                # Handle both recordset and integer ID
+                so_id = sale_order_id.id if hasattr(sale_order_id, 'id') else sale_order_id
+                domain.append(('sale_order_id', '=', so_id))
         
         existing_event = self.search(domain, limit=1)
         
@@ -192,7 +210,8 @@ class OpenELISFailedEvent(models.Model):
             if partner_ref:
                 update_vals['partner_ref'] = partner_ref
             if sale_order_id:
-                update_vals['sale_order_id'] = sale_order_id.id
+                # Handle both recordset and integer ID
+                update_vals['sale_order_id'] = sale_order_id.id if hasattr(sale_order_id, 'id') else sale_order_id
             
             existing_event.with_context(allow_system_write=True).write(update_vals)
             return existing_event
@@ -208,7 +227,7 @@ class OpenELISFailedEvent(models.Model):
                 'error_type': error_type or '',
                 'partner_id': partner_id.id if partner_id else False,
                 'partner_ref': partner_ref or '',
-                'sale_order_id': sale_order_id.id if sale_order_id else False,
+                'sale_order_id': sale_order_id.id if (sale_order_id and hasattr(sale_order_id, 'id')) else (sale_order_id if sale_order_id else False),
                 'state': 'pending',
                 'retry_count': 0,
                 'sequence_number': sequence_number,
@@ -273,6 +292,27 @@ class OpenELISFailedEvent(models.Model):
                 
                 if result.get('status') != 'success':
                     raise UserError(_("Retry failed: %s") % result.get('message', 'Unknown error'))
+            
+            elif self.event_type == 'lab_test':
+                # Retry lab test sync
+                product_id = payload_dict.get('id')
+                if not product_id:
+                    raise UserError(_("Product ID not found in payload."))
+                
+                # We assume product.template as that's what the sync service expects/uses mostly
+                product = self.env['product.template'].browse(product_id)
+                if not product.exists():
+                    raise UserError(_("Product not found (ID: %s)") % product_id)
+                
+                sync_service = self.env['openelis.sync.service']
+                result = sync_service.sync_lab_test_to_openelis(product)
+                
+                if result.get('status') != 'success':
+                     raise UserError(_("Retry failed: %s") % result.get('message', 'Unknown error'))
+
+            else:
+                 # Logic missing for this event type
+                 raise UserError(_("Retry logic missing for event type '%s'. (500 Server Error)") % self.event_type)
             
             # If we get here, sync was successful
             _logger.info(">>> Failed Event Retry: Sync method returned success. Proceeding to set state=success and unlink.")

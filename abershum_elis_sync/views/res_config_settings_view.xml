@@ -6,47 +6,66 @@
         <field name="priority" eval="1"/>
         <field name="inherit_id" ref="bahmni_sale.res_config_settings_view_form_i"/>
         <field name="arch" type="xml">
-            <xpath expr="//div[@name='bahmni-custom-configs']" position="inside">
-                <div class="row mt16 o_settings_container" name="abershum_elis_sync_configurations">
-                    <h2 style="text-align: center;">OpenELIS Integration</h2>
-                    <div class="col-12 col-lg-6 o_setting_box" id="openelis_sync_enable">
-                        <div class="o_setting_left_pane">
-                            <field name="enable_openelis_sync"/>
-                        </div>
-                        <div class="o_setting_right_pane">
-                            <label for="enable_openelis_sync" string="Enable Test Order Sync"/>
-                            <div class="text-muted col-md-12">
-                                Enable automatic sync of lab test orders to OpenELIS when sale orders are confirmed
-                            </div>
-                            <div class="content-group" attrs="{'invisible': [('enable_openelis_sync', '=', False)]}">
-                                <div class="row mt16" id="openelis_api_url_row">
-                                    <label for="openelis_api_url" class="col-lg-3" string="OpenELIS API URL"/>
-                                    <field name="openelis_api_url" placeholder="e.g. http://openelis:8052/openelis"/>
-                                </div>
-                                <div class="row mt16" id="openelis_api_username_row">
-                                    <label for="openelis_api_username" class="col-lg-3" string="OpenELIS API Username"/>
-                                    <field name="openelis_api_username" placeholder="e.g. admin"/>
-                                </div>
-                                <div class="row mt16" id="openelis_api_password_row">
-                                    <label for="openelis_api_password" class="col-lg-3" string="OpenELIS API Password"/>
-                                    <field name="openelis_api_password" password="True" placeholder="e.g. password"/>
-                                </div>
-                            </div>
-                        </div>
+            <xpath expr="//div[hasclass('settings')]" position="inside">
+                <div class="app_settings_block" data-string="Abershum Lab" id="abershum_lab_settings" string="Abershum Lab" data-key="abershum_elis_sync">
+                    <div class="o_setting_container">
+                        <img src="/abershum_elis_sync/static/src/img/abershum-logo.png" 
+                             style="max-width: 200px; margin-bottom: 20px; display: block;"/>
                     </div>
-                    <div class="col-12 col-lg-6 o_setting_box" id="openelis_patient_sync_enable">
-                        <div class="o_setting_left_pane">
-                            <field name="enable_patient_sync"/>
+                    <h2>OpenELIS Integration</h2>
+                    <div class="row mt16 o_settings_container">
+                        <div class="col-12 col-lg-6 o_setting_box" id="openelis_sync_enable">
+                            <div class="o_setting_left_pane">
+                                <field name="enable_openelis_sync"/>
+                            </div>
+                            <div class="o_setting_right_pane">
+                                <label for="enable_openelis_sync" string="Enable OpenELIS Sync"/>
+                                <div class="text-muted">
+                                    Enable automatic sync of patients and lab test orders to OpenELIS
+                                </div>
+                                <div class="content-group" attrs="{'invisible': [('enable_openelis_sync', '=', False)]}">
+                                    <div class="row mt16">
+                                        <label for="openelis_api_url" class="col-lg-4" string="OpenELIS API URL"/>
+                                        <field name="openelis_api_url" placeholder="e.g. http://openelis:8052/openelis"/>
+                                    </div>
+                                    <div class="row mt16">
+                                        <label for="openelis_api_username" class="col-lg-4" string="OpenELIS API Username"/>
+                                        <field name="openelis_api_username" placeholder="e.g. admin"/>
+                                    </div>
+                                    <div class="row mt16">
+                                        <label for="openelis_api_password" class="col-lg-4" string="OpenELIS API Password"/>
+                                        <field name="openelis_api_password" password="True" placeholder="e.g. password"/>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="o_setting_right_pane">
-                            <label for="enable_patient_sync" string="Enable Patient Sync"/>
-                            <div class="text-muted col-md-12">
-                                Enable automatic sync of patient data to OpenELIS when customers are created or updated
+
+                        <div class="col-12 col-lg-6 o_setting_box" id="openelis_sync_actions">
+                            <div class="o_setting_right_pane">
+                                <label string="Lab Catalog Sync" for="action_pull_lab_catalog"/>
+                                <div class="text-muted">
+                                    Pull lab tests and panels from OpenELIS. This will update existing products by UUID or Name.
+                                </div>
+                                <div class="mt8">
+                                    <button name="action_pull_lab_catalog" 
+                                            type="object" 
+                                            string="Sync Lab Catalog from OpenELIS" 
+                                            class="btn btn-primary"/>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </xpath>
         </field>
+    </record>
+
+    <record id="abershum_elis_sync_config_settings_action" model="ir.actions.act_window">
+        <field name="name">Settings</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">res.config.settings</field>
+        <field name="view_mode">form</field>
+        <field name="target">inline</field>
+        <field name="context">{'module' : 'abershum_elis_sync'}</field>
     </record>
 </odoo>

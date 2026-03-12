@@ -4,6 +4,7 @@ import requests
 import uuid
 import json
 from datetime import date, datetime
+from dateutil.relativedelta import relativedelta
 from odoo import models, api, fields, _
 from odoo.exceptions import ValidationError, UserError
 
@@ -32,9 +33,25 @@ class ResPartner(models.Model):
         string='Age (Years)',
         compute='_compute_age',
         inverse='_inverse_age',
-        store=False,
+        store=True,
         readonly=False,
-        help='Patient age in years. If date of birth is entered, this will be calculated automatically. You can also enter age directly.'
+        help='Patient age in years.'
+    )
+    birth_months = fields.Integer(
+        string='Age (Months)',
+        compute='_compute_age',
+        inverse='_inverse_age',
+        store=True,
+        readonly=False,
+        help='Patient age in months (0-11).'
+    )
+    birth_days = fields.Integer(
+        string='Age (Days)',
+        compute='_compute_age',
+        inverse='_inverse_age',
+        store=True,
+        readonly=False,
+        help='Patient age in days (0-30).'
     )
     gender = fields.Selection(
         [
@@ -66,53 +83,73 @@ class ResPartner(models.Model):
 
     @api.depends('birthdate')
     def _compute_age(self):
-        """Calculate age from birthdate"""
-        if self.env.context.get('skip_compute_age'):
-            return
-            
-        today = date.today()
+        """Calculate age (years, months, days) from birthdate"""
+        today = fields.Date.context_today(self)
         for partner in self:
             if partner.birthdate:
-                try:
-                    age = today.year - partner.birthdate.year
-                    if today.month < partner.birthdate.month or \
-                       (today.month == partner.birthdate.month and today.day < partner.birthdate.day):
-                        age -= 1
-                    partner.age = max(0, age)
-                except (AttributeError, TypeError):
-                    partner.age = 0
+                rd = relativedelta(today, partner.birthdate)
+                partner.age = rd.years
+                partner.birth_months = rd.months
+                partner.birth_days = rd.days
             else:
-                if not partner.birthdate:
-                    partner.age = 0
+                partner.age = 0
+                partner.birth_months = 0
+                partner.birth_days = 0
 
     def _inverse_age(self):
-        """Calculate birthdate from age"""
-        if self.env.context.get('skip_inverse_age'):
-            return
-            
-        today = date.today()
+        """Calculate birthdate from age components"""
+        today = fields.Date.context_today(self)
         for partner in self:
-            if partner.age and partner.age > 0:
-                try:
-                    birth_year = today.year - partner.age
-                    new_birthdate = date(birth_year, 1, 1)
-                    if not partner.birthdate or partner.birthdate != new_birthdate:
-                        partner.with_context(skip_compute_age=True).birthdate = new_birthdate
-                except (ValueError, TypeError):
-                    pass
+            if any([partner.age, partner.birth_months, partner.birth_days]):
+                new_birthdate = today - relativedelta(years=partner.age or 0, 
+                                                     months=partner.birth_months or 0, 
+                                                     days=partner.birth_days or 0)
+                if partner.birthdate != new_birthdate:
+                    partner.birthdate = new_birthdate
 
-    @api.constrains('birthdate', 'age', 'is_patient', 'is_company')
+    @api.onchange('age', 'birth_months', 'birth_days')
+    def _onchange_age_estimation(self):
+        """Estimate DOB immediately in UI when age fields change"""
+        if any([self.age, self.birth_months, self.birth_days]):
+            today = fields.Date.context_today(self)
+            self.birthdate = today - relativedelta(years=self.age or 0, 
+                                                  months=self.birth_months or 0, 
+                                                  days=self.birth_days or 0)
+
+    @api.onchange('birthdate')
+    def _onchange_birthdate_estimation(self):
+        """Update age components immediately in UI when birthdate changes"""
+        if self.birthdate:
+            today = fields.Date.context_today(self)
+            rd = relativedelta(today, self.birthdate)
+            self.age = rd.years
+            self.birth_months = rd.months
+            self.birth_days = rd.days
+
+    @api.constrains('birthdate', 'age', 'birth_months', 'birth_days', 'is_patient', 'is_company')
     def _check_birthdate_or_age(self):
-        """Validate that birthdate or age is provided for patients"""
+        """Validate that birthdate or age info is provided for patients"""
         for partner in self:
-            if partner.is_patient and not partner.is_company:
-                has_birthdate = partner.birthdate is not False and partner.birthdate is not None
-                has_age = partner.age and partner.age > 0
-                if not has_birthdate and not has_age:
-                    raise ValidationError(
-                        'For patients, either Date of Birth or Age must be provided. '
-                        'OpenELIS requires this information.'
-                    )
+            # Skip validation for system templates or non-patients
+            if not partner.is_patient or partner.is_company:
+                continue
+                
+            # Exclude 'Default User Template', 'Public user', 'OdooBot', and other potential template/system records
+            if partner.name and any(sys_name in partner.name for sys_name in ['Bahmni EMR Sync','Administrator', 'Template', 'Default', 'Public', 'Anonymous', 'Bot']):
+                continue
+
+            has_birthdate = bool(partner.birthdate)
+            has_age_info = any([
+                partner.age > 0,
+                partner.birth_months > 0,
+                partner.birth_days > 0,
+            ])
+            
+            if not has_birthdate and not has_age_info:
+                raise ValidationError(
+                    _('For patient %s, either Date of Birth or Age (Years/Months/Days) must be provided. '
+                      'OpenELIS requires this information.') % partner.name
+                )
 
     @api.model
     def create(self, vals):
@@ -181,7 +218,7 @@ class ResPartner(models.Model):
         _logger.info(">>> OpenELIS Sync: Attempting patient sync for %s (ref: %s)", partner.name, partner.ref)
         
         # 1. Verification
-        sync_enabled = self.env['ir.config_parameter'].sudo().get_param('abershum_elis_sync.enable_patient_sync', False)
+        sync_enabled = self.env['ir.config_parameter'].sudo().get_param('abershum_elis_sync.enable_openelis_sync', False)
         if not sync_enabled:
             _logger.debug("OpenELIS Sync: Disabled in settings.")
             return False
@@ -213,22 +250,17 @@ class ResPartner(models.Model):
                 'city': partner.city or '',
                 'zip': partner.zip or '',
                 'state': partner.state_id.name or '',
+                'state': partner.state_id.name or '',
                 'country': partner.country_id.name or ''
-            }
+            },
+            'age': partner.age if partner.age else 0,
+            'birth_months': partner.birth_months if partner.birth_months else 0,
+            'birth_days': partner.birth_days if partner.birth_days else 0
         }
 
-        # 3. URL Normalization
+        # 3. Request URL preparation
         if not api_url.startswith(('http://', 'https://')):
             api_url = 'http://' + api_url.lstrip('/')
-        
-        # Replace localhost if in Docker
-        import socket
-        try:
-            socket.gethostbyname('openelis')
-            import re
-            api_url = re.sub(r'localhost(:\d+)?', 'openelis:8052', api_url, flags=re.IGNORECASE)
-        except:
-            pass
             
         url = api_url.rstrip('/') + '/rest/odoo/patient'
         
