@@ -8,6 +8,27 @@
         action="bahmni_sale.res_config_settings_action"
         sequence="99"/>
     
+    <!-- Master Data Menus -->
+    <menuitem
+        id="menu_openelis_master_data"
+        name="OpenELIS Master Data"
+        parent="bahmni_sale.bahmni_menu_root"
+        sequence="50"/>
+
+    <menuitem
+        id="menu_openelis_department"
+        name="Departments"
+        parent="menu_openelis_master_data"
+        action="openelis_department_action"
+        sequence="10"/>
+
+    <menuitem
+        id="menu_openelis_sample_type"
+        name="Sample Types"
+        parent="menu_openelis_master_data"
+        action="openelis_sample_type_action"
+        sequence="20"/>
+
     <!-- Failed Sync Events menu -->
     <menuitem
         id="menu_openelis_failed_events"

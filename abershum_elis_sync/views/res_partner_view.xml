@@ -43,9 +43,13 @@
                             <field name="birthdate" 
                                    default_focus="1"
                                    placeholder="YYYY-MM-DD"
-                                   attrs="{'required': [('is_patient', '=', True), ('is_company', '=', False), ('age', '=', 0)]}"/>
-                            <field name="age" 
-                                   attrs="{'required': [('is_patient', '=', True), ('is_company', '=', False), ('birthdate', '=', False)]}"/>
+                                   attrs="{'required': [('is_patient', '=', True), ('is_company', '=', False), ('age', '=', 0), ('birth_months', '=', 0), ('birth_days', '=', 0)]}"/>
+                            <label for="age" string="Age (Y-M-D)"/>
+                            <div class="o_row">
+                                <field name="age" class="oe_inline" attrs="{'required': [('is_patient', '=', True), ('is_company', '=', False), ('birthdate', '=', False)]}"/> Years
+                                <field name="birth_months" class="oe_inline"/> Months
+                                <field name="birth_days" class="oe_inline"/> Days
+                            </div>
                             <field name="gender" 
                                    attrs="{'required': [('is_patient', '=', True), ('is_company', '=', False)]}"/>
                         </group>

@@ -32,6 +32,7 @@
         'views/res_partner_views.xml',
         'views/provider_views.xml',
         'reports/radiology_report.xml',
+        'reports/patient_result_report.xml',
         'reports/report_actions.xml',
         'data/mail_template_data.xml',  # Must load after report_actions.xml
     ],

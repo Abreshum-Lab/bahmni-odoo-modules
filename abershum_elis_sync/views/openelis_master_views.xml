@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Department Views -->
+    <record id="openelis_department_view_tree" model="ir.ui.view">
+        <field name="name">openelis.department.tree</field>
+        <field name="model">openelis.department</field>
+        <field name="arch" type="xml">
+            <tree editable="bottom">
+                <field name="name"/>
+                <field name="uuid" readonly="1"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="openelis_department_action" model="ir.actions.act_window">
+        <field name="name">OpenELIS Departments</field>
+        <field name="res_model">openelis.department</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <!-- Sample Type Views -->
+    <record id="openelis_sample_type_view_tree" model="ir.ui.view">
+        <field name="name">openelis.sample.type.tree</field>
+        <field name="model">openelis.sample.type</field>
+        <field name="arch" type="xml">
+            <tree editable="bottom">
+                <field name="name"/>
+                <field name="uuid" readonly="1"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="openelis_sample_type_action" model="ir.actions.act_window">
+        <field name="name">OpenELIS Sample Types</field>
+        <field name="res_model">openelis.sample.type</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+</odoo>

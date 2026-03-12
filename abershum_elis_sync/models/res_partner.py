@@ -32,9 +32,25 @@ class ResPartner(models.Model):
         string='Age (Years)',
         compute='_compute_age',
         inverse='_inverse_age',
-        store=False,
+        store=True,
         readonly=False,
-        help='Patient age in years. If date of birth is entered, this will be calculated automatically. You can also enter age directly.'
+        help='Patient age in years.'
+    )
+    birth_months = fields.Integer(
+        string='Age (Months)',
+        compute='_compute_age',
+        inverse='_inverse_age',
+        store=True,
+        readonly=False,
+        help='Patient age in months (0-11).'
+    )
+    birth_days = fields.Integer(
+        string='Age (Days)',
+        compute='_compute_age',
+        inverse='_inverse_age',
+        store=True,
+        readonly=False,
+        help='Patient age in days (0-30).'
     )
     gender = fields.Selection(
         [
@@ -66,7 +82,7 @@ class ResPartner(models.Model):
 
     @api.depends('birthdate')
     def _compute_age(self):
-        """Calculate age from birthdate"""
+        """Calculate age (years, months, days) from birthdate"""
         if self.env.context.get('skip_compute_age'):
             return
             
@@ -74,31 +90,54 @@ class ResPartner(models.Model):
         for partner in self:
             if partner.birthdate:
                 try:
-                    age = today.year - partner.birthdate.year
-                    if today.month < partner.birthdate.month or \
-                       (today.month == partner.birthdate.month and today.day < partner.birthdate.day):
-                        age -= 1
-                    partner.age = max(0, age)
-                except (AttributeError, TypeError):
+                    d1 = partner.birthdate
+                    d2 = today
+                    
+                    years = d2.year - d1.year
+                    months = d2.month - d1.month
+                    days = d2.day - d1.day
+                    
+                    if days < 0:
+                        months -= 1
+                        # Approximate days in previous month
+                        days += 30 
+                    
+                    if months < 0:
+                        years -= 1
+                        months += 12
+                        
+                    partner.age = max(0, years)
+                    partner.birth_months = max(0, months)
+                    partner.birth_days = max(0, days)
+                except Exception:
                     partner.age = 0
+                    partner.birth_months = 0
+                    partner.birth_days = 0
             else:
-                if not partner.birthdate:
-                    partner.age = 0
+                partner.age = 0
+                partner.birth_months = 0
+                partner.birth_days = 0
 
     def _inverse_age(self):
-        """Calculate birthdate from age"""
+        """Calculate birthdate from age components"""
         if self.env.context.get('skip_inverse_age'):
             return
             
+        from dateutil.relativedelta import relativedelta
         today = date.today()
         for partner in self:
-            if partner.age and partner.age > 0:
+            if any([partner.age, partner.birth_months, partner.birth_days]):
                 try:
-                    birth_year = today.year - partner.age
-                    new_birthdate = date(birth_year, 1, 1)
+                    # Subtract years, months, and days from today to get approximate birthdate
+                    # Note: Using middle of the month/timeframe for estimation if only partial info provided
+                    # but here we just subtract exactly what is entered.
+                    new_birthdate = today - relativedelta(years=partner.age or 0, 
+                                                         months=partner.birth_months or 0, 
+                                                         days=partner.birth_days or 0)
+                    
                     if not partner.birthdate or partner.birthdate != new_birthdate:
                         partner.with_context(skip_compute_age=True).birthdate = new_birthdate
-                except (ValueError, TypeError):
+                except Exception:
                     pass
 
     @api.constrains('birthdate', 'age', 'is_patient', 'is_company')
@@ -216,7 +255,9 @@ class ResPartner(models.Model):
                 'state': partner.state_id.name or '',
                 'country': partner.country_id.name or ''
             },
-            'age': partner.age if partner.age else 0
+            'age': partner.age if partner.age else 0,
+            'birth_months': partner.birth_months if partner.birth_months else 0,
+            'birth_days': partner.birth_days if partner.birth_days else 0
         }
 
         # 3. Request URL preparation

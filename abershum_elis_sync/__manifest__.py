@@ -32,8 +32,15 @@ It automatically identifies lab test products and sends them to OpenELIS via RES
         'views/res_partner_view.xml',
         'views/product_template_view.xml',
         'views/sale_order_view.xml',
+        'views/openelis_master_views.xml',
         'views/menus.xml',
     ],
+    'assets': {
+        'web.assets_backend': [
+            'abershum_elis_sync/static/src/js/navbar.js',
+            'abershum_elis_sync/static/src/xml/navbar.xml',
+        ],
+    },
     'demo': [],
     'qweb': [],
     'license': 'LGPL-3',

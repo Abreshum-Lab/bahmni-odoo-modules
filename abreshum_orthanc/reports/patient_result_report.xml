@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="report_patient_result">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+                    <div class="page">
+                        <div class="header" style="text-align: center; border-bottom: 2px solid #000; margin-bottom: 20px;">
+                            <h2>Patient Test Result</h2>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-6">
+                                <strong>Patient Name:</strong> <span t-field="o.partner_id.name"/><br/>
+                                <strong>Patient ID:</strong> <span t-field="o.partner_id.ref"/><br/>
+                                <strong>Gender:</strong> <span t-field="o.partner_id.gender"/><br/>
+                                <strong>Age:</strong> <span t-field="o.partner_id.age"/> Years
+                                <t t-if="o.partner_id.birth_months">, <span t-field="o.partner_id.birth_months"/> Months</t>
+                            </div>
+                            <div class="col-6">
+                                <strong>Order Number:</strong> <span t-field="o.name"/><br/>
+                                <strong>Order Date:</strong> <span t-field="o.date_order" t-options='{"widget": "date"}'/><br/>
+                                <strong>Print Date:</strong> <span t-esc="context_timestamp(datetime.datetime.now()).strftime('%Y-%m-%d %H:%M:%S')"/>
+                            </div>
+                        </div>
+
+                        <br/><br/>
+
+                        <table class="table table-sm o_main_table">
+                            <thead>
+                                <tr>
+                                    <th>Test Name</th>
+                                    <th>Result</th>
+                                    <th>Unit</th>
+                                    <th>Reference Range</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-if="o.test_results_data">
+                                    <t t-set="results" t-value="json.loads(o.test_results_data)"/>
+                                    <t t-foreach="results.get('tests', [])" t-as="test">
+                                        <tr>
+                                            <td><span t-esc="test.get('name')"/></td>
+                                            <td><strong><span t-esc="test.get('result')"/></strong></td>
+                                            <td><span t-esc="test.get('unit')"/></td>
+                                            <td><span t-esc="test.get('reference_range')"/></td>
+                                            <td><span t-esc="test.get('status')"/></td>
+                                        </tr>
+                                    </t>
+                                </t>
+                                <t t-else="">
+                                    <tr>
+                                        <td colspan="5" class="text-center">No result data available.</td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                        
+                        <div class="footer" style="margin-top: 50px;">
+                            <p style="font-size: 10px; color: #666;">
+                                * This is a computer generated report and does not require a signature.
+                            </p>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>

@@ -12,13 +12,15 @@ class ProductTemplate(models.Model):
         default=False,
         help='Mark this if the product is a lab test that should sync to OpenELIS'
     )
-    elis_department = fields.Char(
+    elis_department_id = fields.Many2one(
+        'openelis.department',
         string='OpenELIS Department/Section',
         help='The Test Section in OpenELIS this test belongs to'
     )
-    elis_sample_type = fields.Char(
-        string='OpenELIS Sample Type',
-        help='Default sample type for this test in OpenELIS'
+    elis_sample_type_ids = fields.Many2many(
+        'openelis.sample.type',
+        string='OpenELIS Sample Types',
+        help='Sample types for this test in OpenELIS'
     )
     elis_result_type = fields.Selection([
         ('numerical', 'Numerical'),
@@ -89,7 +91,7 @@ class ProductTemplate(models.Model):
         # Check if any relevant fields changed
         relevant_fields = [
             'name', 'default_code', 'description_sale', 'categ_id', 'active', 'list_price',
-            'is_lab_test', 'elis_department', 'elis_sample_type', 'elis_result_type', 
+            'is_lab_test', 'elis_department_id', 'elis_sample_type_ids', 'elis_result_type', 
             'elis_uom', 'elis_reference_range', 'elis_loinc', 'elis_sort_order',
             'is_panel', 'panel_test_ids', 'uuid'
         ]
