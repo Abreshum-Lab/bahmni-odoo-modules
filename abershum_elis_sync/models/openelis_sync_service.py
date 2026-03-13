@@ -294,8 +294,8 @@ class OpenELISSyncService(models.Model):
             if line.display_type in ('line_section', 'line_note'):
                 continue
             
-            # Use the new is_lab_test flag
-            if line.product_id and line.product_id.is_lab_test:
+            # Use the new is_lab_test or is_panel flag
+            if line.product_id and (line.product_id.is_lab_test or line.product_id.is_panel):
                 lab_test_lines.append(line)
         
         return lab_test_lines

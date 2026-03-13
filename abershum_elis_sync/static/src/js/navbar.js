@@ -11,14 +11,14 @@ patch(NavBar.prototype, "abershum_elis_sync_navbar", {
     },
 
     async onOpenElisClick() {
-        const url = await this.rpc("/web/dataset/call_kw/res.config.settings/get_values", {
-            model: 'res.config.settings',
-            method: 'get_values',
-            args: [],
+        const urlParam = await this.rpc("/web/dataset/call_kw/ir.config_parameter/get_param", {
+            model: 'ir.config_parameter',
+            method: 'get_param',
+            args: ['abershum_elis_sync.openelis_api_url', 'http://localhost/openelis'],
             kwargs: {},
         });
 
-        let openelisUrl = url.openelis_api_url || "http://localhost/openelis";
+        let openelisUrl = urlParam || "http://localhost/openelis";
         // Strip /rest if present in URL
         openelisUrl = openelisUrl.split('/rest')[0];
         window.open(openelisUrl, '_blank');
