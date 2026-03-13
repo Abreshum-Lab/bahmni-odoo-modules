@@ -380,7 +380,7 @@ class OpenELISSyncService(models.Model):
         
         # Build payload
         payload = {
-            'sale_order_id': str(sale_order.id),
+            'sale_order_id': str(sale_order.elis_uuid),
             'sale_order_name': sale_order.name or '',
             'order_date': sale_order.date_order.isoformat() if sale_order.date_order else '',
             'patient': patient_data,

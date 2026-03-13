@@ -45,10 +45,10 @@
                                    placeholder="YYYY-MM-DD"
                                    attrs="{'required': [('is_patient', '=', True), ('is_company', '=', False), ('age', '=', 0), ('birth_months', '=', 0), ('birth_days', '=', 0)]}"/>
                             <label for="age" string="Age (Y-M-D)"/>
-                            <div class="o_row">
-                                <field name="age" class="oe_inline" attrs="{'required': [('is_patient', '=', True), ('is_company', '=', False), ('birthdate', '=', False)]}"/> Years
-                                <field name="birth_months" class="oe_inline"/> Months
-                                <field name="birth_days" class="oe_inline"/> Days
+                            <div class="o_row" name="age_row">
+                                <field name="age" class="oe_inline" style="max-width: 40px !important;" attrs="{'required': [('is_patient', '=', True), ('is_company', '=', False), ('birthdate', '=', False)]}"/> <span>Years</span>
+                                <field name="birth_months" class="oe_inline" style="max-width: 30px !important;"/> <span>Months</span>
+                                <field name="birth_days" class="oe_inline" style="max-width: 30px !important;"/> <span>Days</span>
                             </div>
                             <field name="gender" 
                                    attrs="{'required': [('is_patient', '=', True), ('is_company', '=', False)]}"/>
