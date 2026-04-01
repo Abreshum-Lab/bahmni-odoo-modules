@@ -40,4 +40,5 @@ jobs:
           push: true
           tags: syed77651/odoo-16:${{env.ARTIFACT_VERSION}},syed77651/odoo-16:latest
 
+    
      
